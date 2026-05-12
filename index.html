@@ -277,6 +277,8 @@
     background:rgba(230,220,196,.72);
     overflow:hidden;
   }
+  .desktop-board{display:block}
+  .mobile-board{display:none}
   .row{
     display:grid;
     grid-template-columns:60px minmax(180px,1.4fr) 1fr 1fr 1fr 90px 80px 120px;
@@ -345,6 +347,93 @@
     letter-spacing:.14em;color:var(--red);margin-top:2px;font-weight:500;
   }
   .actions{justify-content:flex-end;gap:6px;flex-wrap:nowrap}
+  .mcard{
+    border-bottom:1px solid var(--line);
+    padding:12px;
+    background:rgba(239,230,211,.74);
+  }
+  .mcard:last-child{border-bottom:none}
+  .mcard.leader{
+    background:linear-gradient(90deg, rgba(224,168,46,.23), rgba(239,230,211,.74) 60%);
+  }
+  .mcard-top{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .mrank{
+    font-family:'Anton',sans-serif;
+    font-size:26px;
+    min-width:44px;
+    line-height:1;
+  }
+  .mname{
+    flex:1;
+    min-width:0;
+    font-family:'Anton',sans-serif;
+    font-size:28px;
+    line-height:1;
+    letter-spacing:.01em;
+  }
+  .mname .tag{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:.14em;
+    background:var(--ink);
+    color:var(--paper);
+    padding:2px 5px;
+    margin-left:8px;
+    text-transform:uppercase;
+    vertical-align:middle;
+  }
+  .mff{
+    text-align:right;
+    font-family:'Anton',sans-serif;
+    font-size:34px;
+    line-height:.9;
+  }
+  .mff small{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--red);
+    letter-spacing:.12em;
+  }
+  .mstats{
+    margin-top:10px;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+  }
+  .mstat{
+    border:1px solid var(--line);
+    padding:8px;
+    background:rgba(239,230,211,.78);
+  }
+  .mstat small{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .mstat strong{
+    font-family:'JetBrains Mono',monospace;
+    font-size:20px;
+    line-height:1;
+  }
+  .mstat .green{color:#0f6a3f}
+  .mstat .red{color:var(--red)}
+  .mcard-actions{
+    margin-top:10px;
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+  }
   .iconbtn{
     border:1.5px solid var(--ink);
     background:transparent;
@@ -576,18 +665,24 @@
     .wordmark h1{font-size:44px}
     .wordmark .sub{flex-wrap:wrap;gap:8px}
     .podium{grid-template-columns:1fr}
+    .section-head{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:12px;
+    }
+    .sort-filter{
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .sort-btn{
+      font-size:14px;
+      padding:6px 10px 5px;
+    }
 
-    .scoreboard{
-      overflow-x:auto;
-      overflow-y:hidden;
-      -webkit-overflow-scrolling:touch;
-      border-width:2px;
-    }
-    .row{min-width:980px}
-    .addrow{
-      min-width:980px;
-      border-top-width:1.5px;
-    }
+    .desktop-board{display:none}
+    .mobile-board{display:block}
+    .scoreboard{border-width:2px}
+    .addrow{border-top:1px solid var(--line-strong)}
     .history-pop{
       right:auto;
       left:0;
@@ -610,12 +705,28 @@
     .logbar select{
       min-width:0;
       flex:1;
+      width:100%;
     }
-    .logbar input{width:96px}
+    .logbar input{
+      width:96px;
+      flex:0 0 96px;
+    }
     .logbar .meta{width:100%}
     .toast{bottom:18px}
+    .footnote{
+      flex-direction:column;
+      gap:6px;
+    }
   }
   @media(max-width:700px){
+    .section-head h2{font-size:32px}
+    .mname{font-size:24px}
+    .mff{font-size:28px}
+    .mstats{
+      grid-template-columns:1fr;
+      gap:6px;
+    }
+    .mstat strong{font-size:18px}
     .rank{font-size:30px}
     .name{font-size:20px}
     .stat{font-size:18px}
@@ -644,6 +755,9 @@ const { useState, useEffect, useMemo, useRef } = React;
 
 // ---------- STORAGE ----------
 const STORAGE_KEY = 'beograd-ff-scoreboard-v1';
+const CLIENT_KEY = 'beograd-ff-client-id-v1';
+const LIVE_STATE_ENDPOINT = '/api/state';
+const LIVE_POLL_MS = 3000;
 
 const DEFAULT_PEOPLE = [
   { id: 'p1', name: 'Dalle' },
@@ -657,17 +771,77 @@ const DEFAULT_PEOPLE = [
   { id: 'p9', name: 'Jonas P' },
 ];
 
+function makeDefaultState() {
+  return {
+    people: DEFAULT_PEOPLE.map((p) => ({ ...p })),
+    entries: {},
+  };
+}
+
+function normalizeState(raw) {
+  const fallback = makeDefaultState();
+  if (!raw || typeof raw !== 'object') return fallback;
+
+  const people = Array.isArray(raw.people)
+    ? raw.people
+        .filter((p) => p && typeof p.id === 'string' && typeof p.name === 'string')
+        .map((p) => ({ id: p.id, name: p.name.trim() || p.name }))
+    : fallback.people;
+
+  const entries = {};
+  const inputEntries = raw.entries && typeof raw.entries === 'object' ? raw.entries : {};
+  for (const [personId, list] of Object.entries(inputEntries)) {
+    if (!Array.isArray(list)) continue;
+    entries[personId] = list
+      .filter((entry) => entry && typeof entry.id === 'string' && typeof entry.ts === 'number')
+      .map((entry) => {
+        const dnf = !!entry.dnf;
+        const numericTime = dnf ? null : Number(entry.time);
+        return {
+          id: entry.id,
+          dnf,
+          time: dnf ? null : (Number.isFinite(numericTime) && numericTime > 0 ? Math.round(numericTime * 100) / 100 : null),
+          ts: entry.ts,
+        };
+      });
+  }
+
+  return { people: people.length ? people : fallback.people, entries };
+}
+
+function stateSignature(raw) {
+  return JSON.stringify(normalizeState(raw));
+}
+
+function hasMeaningfulData(raw) {
+  const state = normalizeState(raw);
+  const hasEntries = Object.values(state.entries || {}).some((items) => Array.isArray(items) && items.length > 0);
+  if (hasEntries) return true;
+  if (state.people.length !== DEFAULT_PEOPLE.length) return true;
+  const currentNames = state.people.map((p) => p.name).join('|');
+  const defaultNames = DEFAULT_PEOPLE.map((p) => p.name).join('|');
+  return currentNames !== defaultNames;
+}
+
+function getClientId() {
+  try {
+    const existing = localStorage.getItem(CLIENT_KEY);
+    if (existing) return existing;
+    const fresh = `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    localStorage.setItem(CLIENT_KEY, fresh);
+    return fresh;
+  } catch (e) {
+    return `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { people: DEFAULT_PEOPLE, entries: {} };
-    const parsed = JSON.parse(raw);
-    return {
-      people: parsed.people || DEFAULT_PEOPLE,
-      entries: parsed.entries || {},
-    };
+    if (!raw) return makeDefaultState();
+    return normalizeState(JSON.parse(raw));
   } catch (e) {
-    return { people: DEFAULT_PEOPLE, entries: {} };
+    return makeDefaultState();
   }
 }
 
@@ -851,26 +1025,213 @@ function Row({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistor
   );
 }
 
+function MobileCard({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistory, onDeleteEntry, onRemovePerson }) {
+  const s = person.stats;
+  return (
+    <div className={`mcard ${isLeader ? 'leader' : ''}`}>
+      <div className="mcard-top">
+        <div className="mrank">#{rank}</div>
+        <div className="mname">
+          {person.name}
+          {isLeader && <span className="tag">KAPETAN</span>}
+        </div>
+        <div className="mff">
+          {s.ffCount}
+          {s.dnfCount > 0 && <small>{s.dnfCount} DNF</small>}
+        </div>
+      </div>
+
+      <div className="mstats">
+        <div className="mstat">
+          <small>Hurtigste</small>
+          <strong className="green">{s.fastest != null ? `${fmt(s.fastest)}s` : '—'}</strong>
+        </div>
+        <div className="mstat">
+          <small>Dårligste</small>
+          <strong className="red">{s.worst != null ? `${fmt(s.worst)}s` : '—'}</strong>
+        </div>
+        <div className="mstat">
+          <small>Gennemsnit</small>
+          <strong>{s.avg != null ? `${fmt(s.avg)}s` : '—'}</strong>
+        </div>
+      </div>
+
+      <div className="mcard-actions">
+        <div className="history-wrap">
+          <button className="iconbtn" onClick={() => onOpenHistory(person.id)}>Log</button>
+          {openHistory === person.id && (
+            <HistoryPopover person={person} onClose={onCloseHistory} onDelete={(eid) => onDeleteEntry(person.id, eid)} />
+          )}
+        </div>
+        <button className="iconbtn danger" onClick={() => {
+          if (confirm(`Fjern ${person.name} fra scoreboardet?\n(Alle tider slettes)`)) onRemovePerson(person.id);
+        }}>Fjern Boy</button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
-  const [{ people, entries }, setState] = useState(loadState());
+  const [state, setState] = useState(() => loadState());
+  const { people, entries } = state;
   const [newName, setNewName] = useState('');
   const [selectedId, setSelectedId] = useState('');
   const [timeInput, setTimeInput] = useState('');
   const [openHistory, setOpenHistory] = useState(null);
   const [toast, setToast] = useState(null);
   const [sortMode, setSortMode] = useState('fastest'); // 'fastest' | 'avg'
-
-  // Persist
-  useEffect(() => { saveState({ people, entries }); }, [people, entries]);
+  const [syncMeta, setSyncMeta] = useState({
+    status: 'connecting',
+    revision: 0,
+    updatedAt: null,
+    updatedBy: null,
+  });
+  const clientIdRef = useRef(getClientId());
+  const stateRef = useRef(state);
+  const revisionRef = useRef(0);
 
   // Default selected
   useEffect(() => {
-    if (!selectedId && people.length) setSelectedId(people[0].id);
+    if (!selectedId && people.length) {
+      setSelectedId(people[0].id);
+      return;
+    }
+    if (selectedId && !people.some((p) => p.id === selectedId)) {
+      setSelectedId(people[0]?.id || '');
+    }
   }, [people, selectedId]);
 
   const showToast = (msg, kind) => {
     setToast({ msg, kind });
     setTimeout(() => setToast(null), 1900);
+  };
+
+  useEffect(() => {
+    stateRef.current = state;
+    saveState(state);
+  }, [state]);
+
+  const applyEnvelope = (envelope, options = {}) => {
+    const silent = options.silent !== false;
+    if (!envelope || !envelope.state) return;
+    const normalized = normalizeState(envelope.state);
+    const incomingSig = stateSignature(normalized);
+    const currentSig = stateSignature(stateRef.current);
+    if (incomingSig !== currentSig) {
+      setState(normalized);
+    }
+    saveState(normalized);
+
+    const revision = Number.isFinite(envelope.revision)
+      ? envelope.revision
+      : (Number.isFinite(envelope.version) ? envelope.version : 0);
+    revisionRef.current = Math.max(revisionRef.current, revision);
+    setSyncMeta({
+      status: 'live',
+      revision: revisionRef.current,
+      updatedAt: envelope.updatedAt || null,
+      updatedBy: envelope.updatedBy || null,
+    });
+
+    if (!silent && incomingSig !== currentSig) {
+      showToast('Live-opdatering modtaget');
+    }
+  };
+
+  const fetchRemoteState = async (options = {}) => {
+    const response = await fetch(`${LIVE_STATE_ENDPOINT}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`GET /api/state failed (${response.status})`);
+    const envelope = await response.json();
+    applyEnvelope(envelope, options);
+    return envelope;
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const bootstrap = async () => {
+      try {
+        const envelope = await fetchRemoteState({ silent: true });
+        const remoteRevision = Number.isFinite(envelope?.revision)
+          ? envelope.revision
+          : (Number.isFinite(envelope?.version) ? envelope.version : 0);
+        if (remoteRevision === 0 && hasMeaningfulData(stateRef.current)) {
+          await dispatchAction(
+            'replace_state',
+            { state: stateRef.current },
+            { successMessage: 'Lokale tider er synkroniseret live' }
+          );
+        }
+      } catch (err) {
+        if (!active) return;
+        setSyncMeta((prev) => ({ ...prev, status: 'offline' }));
+        showToast('Offline cache aktiv', 'dnf');
+      }
+    };
+
+    bootstrap();
+
+    const pollId = window.setInterval(async () => {
+      if (!active) return;
+      try {
+        const response = await fetch(`${LIVE_STATE_ENDPOINT}?t=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`GET /api/state failed (${response.status})`);
+        const envelope = await response.json();
+        const remoteRevision = Number.isFinite(envelope.revision)
+          ? envelope.revision
+          : (Number.isFinite(envelope.version) ? envelope.version : 0);
+        if (remoteRevision > revisionRef.current) {
+          applyEnvelope(envelope, { silent: true });
+        } else {
+          setSyncMeta((prev) => ({
+            ...prev,
+            status: prev.status === 'saving' ? 'saving' : 'live',
+            revision: Math.max(prev.revision || 0, remoteRevision),
+            updatedAt: envelope.updatedAt || prev.updatedAt || null,
+            updatedBy: envelope.updatedBy || prev.updatedBy || null,
+          }));
+        }
+      } catch (err) {
+        setSyncMeta((prev) => ({ ...prev, status: 'offline' }));
+      }
+    }, LIVE_POLL_MS);
+
+    return () => {
+      active = false;
+      window.clearInterval(pollId);
+    };
+  }, []);
+
+  const dispatchAction = async (action, payload, options = {}) => {
+    try {
+      setSyncMeta((prev) => ({ ...prev, status: 'saving' }));
+      const response = await fetch(LIVE_STATE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          payload,
+          updatedBy: clientIdRef.current,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.error || `POST /api/state failed (${response.status})`);
+      }
+      applyEnvelope(data, { silent: true });
+      if (options.successMessage) {
+        showToast(options.successMessage, options.kind);
+      }
+      return true;
+    } catch (err) {
+      console.warn('Live action failed:', err);
+      setSyncMeta((prev) => ({ ...prev, status: 'offline' }));
+      showToast(options.errorMessage || 'Kunne ikke gemme live data', 'dnf');
+      try {
+        await fetchRemoteState({ silent: true });
+      } catch (ignored) {}
+      return false;
+    }
   };
 
   // Computed: people with stats, ranked
@@ -900,25 +1261,28 @@ function App() {
   }, [peopleWithStats, sortMode]);
 
   // Actions
-  const addPerson = (name) => {
+  const addPerson = async (name) => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    const id = 'p' + Date.now() + '_' + Math.floor(Math.random() * 999);
-    setState(s => ({ ...s, people: [...s.people, { id, name: trimmed }] }));
-    setNewName('');
-    showToast(`+ ${trimmed} på listen`);
+    const ok = await dispatchAction(
+      'add_person',
+      { name: trimmed },
+      { successMessage: `+ ${trimmed} på listen` }
+    );
+    if (ok) setNewName('');
   };
 
-  const removePerson = (id) => {
-    setState(s => {
-      const next = { ...s.entries };
-      delete next[id];
-      return { people: s.people.filter(p => p.id !== id), entries: next };
-    });
-    if (selectedId === id) setSelectedId('');
+  const removePerson = async (id) => {
+    const personName = people.find((p) => p.id === id)?.name || 'Boy';
+    const ok = await dispatchAction(
+      'remove_person',
+      { personId: id },
+      { successMessage: `${personName} fjernet`, kind: 'dnf' }
+    );
+    if (ok && selectedId === id) setSelectedId('');
   };
 
-  const logTime = () => {
+  const logTime = async () => {
     if (!selectedId) return;
     const num = parseFloat(timeInput.replace(',', '.'));
     if (!Number.isFinite(num) || num <= 0) {
@@ -926,36 +1290,46 @@ function App() {
       return;
     }
     const rounded = Math.round(num * 100) / 100;
-    const e = { id: 't' + Date.now(), time: rounded, dnf: false, ts: Date.now() };
-    setState(s => ({
-      ...s,
-      entries: { ...s.entries, [selectedId]: [...(s.entries[selectedId] || []), e] },
-    }));
-    setTimeInput('');
     const p = people.find(x => x.id === selectedId);
-    showToast(`${p?.name}: ${rounded.toFixed(2)}s`);
+    const ok = await dispatchAction(
+      'log_time',
+      { personId: selectedId, time: rounded },
+      { successMessage: `${p?.name || 'Boy'}: ${rounded.toFixed(2)}s` }
+    );
+    if (ok) setTimeInput('');
   };
 
-  const logDNF = () => {
+  const logDNF = async () => {
     if (!selectedId) return;
-    const e = { id: 't' + Date.now(), time: null, dnf: true, ts: Date.now() };
-    setState(s => ({
-      ...s,
-      entries: { ...s.entries, [selectedId]: [...(s.entries[selectedId] || []), e] },
-    }));
-    setTimeInput('');
     const p = people.find(x => x.id === selectedId);
-    showToast(`${p?.name}: DNF`, 'dnf');
+    const ok = await dispatchAction(
+      'log_dnf',
+      { personId: selectedId },
+      { successMessage: `${p?.name || 'Boy'}: DNF`, kind: 'dnf' }
+    );
+    if (ok) setTimeInput('');
   };
 
-  const deleteEntry = (personId, entryId) => {
-    setState(s => ({
-      ...s,
-      entries: { ...s.entries, [personId]: (s.entries[personId] || []).filter(e => e.id !== entryId) },
-    }));
+  const deleteEntry = async (personId, entryId) => {
+    await dispatchAction(
+      'delete_entry',
+      { personId, entryId },
+      { successMessage: 'Log fjernet' }
+    );
   };
 
   const leaderId = ranked[0]?.stats?.[sortMode === 'avg' ? 'avg' : 'fastest'] != null ? ranked[0].id : null;
+  const totalEntries = people.reduce((acc, p) => acc + (entries[p.id]?.length || 0), 0);
+  const syncLabel = syncMeta.status === 'live'
+    ? `Live v${syncMeta.revision}`
+    : syncMeta.status === 'saving'
+      ? 'Gemmer…'
+      : syncMeta.status === 'connecting'
+        ? 'Forbinder…'
+        : 'Offline cache';
+  const syncTimeLabel = syncMeta.updatedAt
+    ? new Date(syncMeta.updatedAt).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })
+    : null;
 
   return (
     <div className="frame">
@@ -981,34 +1355,55 @@ function App() {
       </div>
 
       <div className="scoreboard">
-        <div className="row head">
-          <div className="cell">№</div>
-          <div className="cell">NAVN</div>
-          <div className="cell">HURTIGSTE</div>
-          <div className="cell">DÅRLIGSTE</div>
-          <div className="cell">GENNEMSNIT</div>
-          <div className="cell">ANTAL FF</div>
-          <div className="cell">LOG</div>
-          <div className="cell">FJERN BOY</div>
+        <div className="desktop-board">
+          <div className="row head">
+            <div className="cell">№</div>
+            <div className="cell">NAVN</div>
+            <div className="cell">HURTIGSTE</div>
+            <div className="cell">DÅRLIGSTE</div>
+            <div className="cell">GENNEMSNIT</div>
+            <div className="cell">ANTAL FF</div>
+            <div className="cell">LOG</div>
+            <div className="cell">FJERN BOY</div>
+          </div>
+
+          {ranked.length === 0 && (
+            <div className="empty-state">Ingen deltagere — tilføj din første boy nedenfor</div>
+          )}
+
+          {ranked.map((p, idx) => (
+            <Row
+              key={p.id}
+              person={p}
+              rank={idx + 1}
+              isLeader={p.id === leaderId}
+              onOpenHistory={(id) => setOpenHistory(id === openHistory ? null : id)}
+              openHistory={openHistory}
+              onCloseHistory={() => setOpenHistory(null)}
+              onDeleteEntry={deleteEntry}
+              onRemovePerson={removePerson}
+            />
+          ))}
         </div>
 
-        {ranked.length === 0 && (
-          <div className="empty-state">Ingen deltagere — tilføj din første boy nedenfor</div>
-        )}
-
-        {ranked.map((p, idx) => (
-          <Row
-            key={p.id}
-            person={p}
-            rank={idx + 1}
-            isLeader={p.id === leaderId}
-            onOpenHistory={(id) => setOpenHistory(id === openHistory ? null : id)}
-            openHistory={openHistory}
-            onCloseHistory={() => setOpenHistory(null)}
-            onDeleteEntry={deleteEntry}
-            onRemovePerson={removePerson}
-          />
-        ))}
+        <div className="mobile-board">
+          {ranked.length === 0 && (
+            <div className="empty-state">Ingen deltagere — tilføj din første boy nedenfor</div>
+          )}
+          {ranked.map((p, idx) => (
+            <MobileCard
+              key={p.id}
+              person={p}
+              rank={idx + 1}
+              isLeader={p.id === leaderId}
+              onOpenHistory={(id) => setOpenHistory(id === openHistory ? null : id)}
+              openHistory={openHistory}
+              onCloseHistory={() => setOpenHistory(null)}
+              onDeleteEntry={deleteEntry}
+              onRemovePerson={removePerson}
+            />
+          ))}
+        </div>
 
         <div className="addrow">
           <span className="hint">+ TILFØJ DELTAGER →</span>
@@ -1048,7 +1443,7 @@ function App() {
         <button className="btn" onClick={logTime}>LOG TID</button>
         <button className="btn dnf" onClick={logDNF}>DNF</button>
         <div className="spacer"></div>
-        <div className="meta">{people.reduce((acc, p) => acc + (entries[p.id]?.length || 0), 0)} FFs i alt</div>
+        <div className="meta">{totalEntries} FFs i alt · {syncLabel}{syncTimeLabel ? ` · ${syncTimeLabel}` : ''}</div>
       </div>
 
       {toast && <div className={`toast ${toast.kind || ''}`}>{toast.msg}</div>}
