@@ -71,7 +71,7 @@
     max-width:1400px;
     margin:20px auto 0;
     padding:32px 36px 140px;
-    background-color:rgba(239,230,211,.9);
+    background-color:rgba(239,230,211,.78);
     background-image:
       radial-gradient(circle at 20% 30%, rgba(22,17,13,.035) 0 1px, transparent 1.5px),
       radial-gradient(circle at 70% 80%, rgba(22,17,13,.03) 0 1px, transparent 1.5px),
@@ -81,6 +81,7 @@
     box-shadow:0 18px 38px rgba(0,0,0,.35);
     position:relative;
     z-index:2;
+    backdrop-filter:blur(1.5px);
   }
 
   /* ---------- HEADER ---------- */
@@ -1072,39 +1073,58 @@ const BG_IMAGES = [
   'assets/beograd-bg/IMG_9598.jpg',
   'assets/beograd-bg/IMG_1844.jpg'
 ];
+const ROTATION_INTERVAL_MS = 30000;
 
 (() => {
   const slideA = document.querySelector('.bg-slide-a');
   const slideB = document.querySelector('.bg-slide-b');
   if (!slideA || !slideB || BG_IMAGES.length === 0) return;
 
-  const preload = (src) => {
-    const img = new Image();
-    img.src = src;
+  const loadImage = (src) => {
+    if (!src) return Promise.resolve();
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = resolve;
+      img.onerror = resolve;
+      img.src = src;
+    });
   };
-  BG_IMAGES.forEach(preload);
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const saveData = Boolean(navigator.connection && navigator.connection.saveData);
+  const dynamicEnabled = BG_IMAGES.length > 1 && !prefersReducedMotion && !saveData;
+
+  const setSlide = (el, src) => {
+    el.style.backgroundImage = `url("${src}")`;
+  };
 
   let index = 0;
   let active = slideA;
   let standby = slideB;
+  setSlide(active, BG_IMAGES[index]);
+  active.classList.add('active');
 
-  const show = (el, src) => {
-    el.style.backgroundImage = `url("${src}")`;
-  };
+  if (!dynamicEnabled) return;
 
-  show(active, BG_IMAGES[index]);
-
-  if (BG_IMAGES.length < 2) return;
-
-  setInterval(() => {
-    index = (index + 1) % BG_IMAGES.length;
-    show(standby, BG_IMAGES[index]);
+  const rotate = async () => {
+    const nextIndex = (index + 1) % BG_IMAGES.length;
+    const nextSrc = BG_IMAGES[nextIndex];
+    await loadImage(nextSrc);
+    setSlide(standby, nextSrc);
     standby.classList.add('active');
     active.classList.remove('active');
     const previous = active;
     active = standby;
     standby = previous;
-  }, 30000);
+    index = nextIndex;
+  };
+
+  // Preload the immediate next image only.
+  loadImage(BG_IMAGES[(index + 1) % BG_IMAGES.length]);
+
+  setInterval(() => {
+    rotate();
+  }, ROTATION_INTERVAL_MS);
 })();
 </script>
 </body>
