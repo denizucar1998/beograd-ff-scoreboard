@@ -277,6 +277,8 @@
     background:rgba(230,220,196,.72);
     overflow:hidden;
   }
+  .desktop-board{display:block}
+  .mobile-board{display:none}
   .row{
     display:grid;
     grid-template-columns:60px minmax(180px,1.4fr) 1fr 1fr 1fr 90px 80px 120px;
@@ -345,6 +347,93 @@
     letter-spacing:.14em;color:var(--red);margin-top:2px;font-weight:500;
   }
   .actions{justify-content:flex-end;gap:6px;flex-wrap:nowrap}
+  .mcard{
+    border-bottom:1px solid var(--line);
+    padding:12px;
+    background:rgba(239,230,211,.74);
+  }
+  .mcard:last-child{border-bottom:none}
+  .mcard.leader{
+    background:linear-gradient(90deg, rgba(224,168,46,.23), rgba(239,230,211,.74) 60%);
+  }
+  .mcard-top{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .mrank{
+    font-family:'Anton',sans-serif;
+    font-size:26px;
+    min-width:44px;
+    line-height:1;
+  }
+  .mname{
+    flex:1;
+    min-width:0;
+    font-family:'Anton',sans-serif;
+    font-size:28px;
+    line-height:1;
+    letter-spacing:.01em;
+  }
+  .mname .tag{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:.14em;
+    background:var(--ink);
+    color:var(--paper);
+    padding:2px 5px;
+    margin-left:8px;
+    text-transform:uppercase;
+    vertical-align:middle;
+  }
+  .mff{
+    text-align:right;
+    font-family:'Anton',sans-serif;
+    font-size:34px;
+    line-height:.9;
+  }
+  .mff small{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--red);
+    letter-spacing:.12em;
+  }
+  .mstats{
+    margin-top:10px;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+  }
+  .mstat{
+    border:1px solid var(--line);
+    padding:8px;
+    background:rgba(239,230,211,.78);
+  }
+  .mstat small{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .mstat strong{
+    font-family:'JetBrains Mono',monospace;
+    font-size:20px;
+    line-height:1;
+  }
+  .mstat .green{color:#0f6a3f}
+  .mstat .red{color:var(--red)}
+  .mcard-actions{
+    margin-top:10px;
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+  }
   .iconbtn{
     border:1.5px solid var(--ink);
     background:transparent;
@@ -396,7 +485,10 @@
     color:var(--paper);
     border-top:3px solid var(--red);
     padding:14px 36px;
-    display:flex;align-items:center;gap:14px;
+    display:grid;
+    grid-template-columns:auto 210px 140px auto auto 1fr;
+    align-items:center;
+    gap:10px 12px;
     z-index:30;
   }
   .logbar .label{
@@ -405,6 +497,19 @@
     letter-spacing:.04em;
     color:var(--paper);
     display:flex;align-items:center;gap:10px;
+  }
+  .logbar-current{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(239,230,211,.78);
+    white-space:nowrap;
+  }
+  .logbar-current b{
+    color:var(--paper);
+    font-weight:700;
+    letter-spacing:.08em;
   }
   .logbar .label .pulse{
     width:10px;height:10px;background:var(--red);border-radius:50%;
@@ -426,9 +531,15 @@
   }
   .logbar select{font-family:'Anton',sans-serif;font-size:20px;font-weight:400;letter-spacing:.02em;min-width:170px}
   .logbar select option{background:var(--ink);color:var(--paper)}
-  .logbar input{width:140px;text-align:center}
+  .logbar input{width:100%;text-align:center}
+  .logbar-time{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .logbar-time input{flex:1}
   .logbar input::placeholder{color:rgba(239,230,211,.4)}
-  .logbar .seclabel{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;color:rgba(239,230,211,.55);text-transform:uppercase;margin-left:-6px}
+  .logbar .seclabel{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;color:rgba(239,230,211,.55);text-transform:uppercase}
   .logbar .btn{
     font-family:'Anton',sans-serif;
     font-size:22px;
@@ -443,7 +554,31 @@
   .logbar .btn:hover{background:var(--mustard);color:var(--ink)}
   .logbar .btn.dnf{background:transparent;border:1.5px solid rgba(239,230,211,.4);color:var(--paper)}
   .logbar .btn.dnf:hover{background:var(--red-deep);border-color:var(--red-deep);color:var(--paper)}
-  .logbar .spacer{flex:1}
+  .logbar-people{
+    display:none;
+    grid-column:1/-1;
+    overflow-x:auto;
+    white-space:nowrap;
+    gap:8px;
+    padding-bottom:2px;
+  }
+  .person-chip{
+    border:1.5px solid rgba(239,230,211,.35);
+    background:transparent;
+    color:rgba(239,230,211,.85);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    padding:8px 10px;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+  .person-chip.active{
+    background:var(--red);
+    border-color:var(--red);
+    color:var(--paper);
+  }
   .logbar .meta{
     font-family:'JetBrains Mono',monospace;
     font-size:10px;
@@ -572,28 +707,67 @@
     .wordmark h1{font-size:44px}
     .wordmark .sub{flex-wrap:wrap;gap:8px}
     .podium{grid-template-columns:1fr}
+    .section-head{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:12px;
+    }
+    .sort-filter{
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .sort-btn{
+      font-size:14px;
+      padding:6px 10px 5px;
+    }
+    .desktop-board{display:none}
+    .mobile-board{display:block}
     .logbar{
       padding:12px;
+      grid-template-columns:1fr 1fr;
       gap:8px;
-      flex-wrap:wrap;
+      padding-bottom:calc(12px + env(safe-area-inset-bottom));
+      background:rgba(22,17,13,.96);
     }
     .logbar .label{
-      width:100%;
+      grid-column:1/-1;
       font-size:18px;
     }
-    .logbar select{
-      min-width:0;
-      flex:1;
+    .logbar-current{
+      grid-column:1/-1;
+      white-space:normal;
     }
-    .logbar input{width:96px}
-    .logbar .meta{width:100%}
+    .logbar select{
+      grid-column:1/-1;
+      width:100%;
+    }
+    .logbar-time{
+      grid-column:1/-1;
+    }
+    .logbar .btn{
+      width:100%;
+      font-size:18px;
+      padding:10px 12px;
+    }
+    .logbar-people{display:flex}
+    .logbar .meta{
+      grid-column:1/-1;
+      width:100%;
+    }
+    .footnote{
+      flex-direction:column;
+      gap:6px;
+    }
   }
   @media(max-width:700px){
-    .row{grid-template-columns:40px minmax(120px,1fr) 1fr 1fr 1fr 60px 78px 92px}
-    .rank{font-size:30px}
-    .name{font-size:20px}
-    .stat{font-size:18px}
-    .ffcount{font-size:24px}
+    .section-head h2{font-size:32px}
+    .mname{font-size:24px}
+    .mff{font-size:28px}
+    .mstats{
+      grid-template-columns:1fr;
+      gap:6px;
+    }
+    .mstat strong{font-size:18px}
     .addrow{
       flex-wrap:wrap;
       gap:8px;
@@ -814,6 +988,52 @@ function Row({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistor
   );
 }
 
+function MobileCard({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistory, onDeleteEntry, onRemovePerson }) {
+  const s = person.stats;
+  return (
+    <div className={`mcard ${isLeader ? 'leader' : ''}`}>
+      <div className="mcard-top">
+        <div className="mrank">#{rank}</div>
+        <div className="mname">
+          {person.name}
+          {isLeader && <span className="tag">KAPETAN</span>}
+        </div>
+        <div className="mff">
+          {s.ffCount}
+          {s.dnfCount > 0 && <small>{s.dnfCount} DNF</small>}
+        </div>
+      </div>
+
+      <div className="mstats">
+        <div className="mstat">
+          <small>Hurtigste</small>
+          <strong className="green">{s.fastest != null ? `${fmt(s.fastest)}s` : '—'}</strong>
+        </div>
+        <div className="mstat">
+          <small>Dårligste</small>
+          <strong className="red">{s.worst != null ? `${fmt(s.worst)}s` : '—'}</strong>
+        </div>
+        <div className="mstat">
+          <small>Gennemsnit</small>
+          <strong>{s.avg != null ? `${fmt(s.avg)}s` : '—'}</strong>
+        </div>
+      </div>
+
+      <div className="mcard-actions">
+        <div className="history-wrap">
+          <button className="iconbtn" onClick={() => onOpenHistory(person.id)}>Log</button>
+          {openHistory === person.id && (
+            <HistoryPopover person={person} onClose={onCloseHistory} onDelete={(eid) => onDeleteEntry(person.id, eid)} />
+          )}
+        </div>
+        <button className="iconbtn danger" onClick={() => {
+          if (confirm(`Fjern ${person.name} fra scoreboardet?\n(Alle tider slettes)`)) onRemovePerson(person.id);
+        }}>Fjern Boy</button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [{ people, entries }, setState] = useState(loadState());
   const [newName, setNewName] = useState('');
@@ -919,6 +1139,7 @@ function App() {
   };
 
   const leaderId = ranked[0]?.stats?.[sortMode === 'avg' ? 'avg' : 'fastest'] != null ? ranked[0].id : null;
+  const selectedPersonName = people.find((p) => p.id === selectedId)?.name || '—';
 
   return (
     <div className="frame">
@@ -944,34 +1165,55 @@ function App() {
       </div>
 
       <div className="scoreboard">
-        <div className="row head">
-          <div className="cell">№</div>
-          <div className="cell">NAVN</div>
-          <div className="cell">HURTIGSTE</div>
-          <div className="cell">DÅRLIGSTE</div>
-          <div className="cell">GENNEMSNIT</div>
-          <div className="cell">ANTAL FF</div>
-          <div className="cell">LOG</div>
-          <div className="cell">FJERN BOY</div>
+        <div className="desktop-board">
+          <div className="row head">
+            <div className="cell">№</div>
+            <div className="cell">NAVN</div>
+            <div className="cell">HURTIGSTE</div>
+            <div className="cell">DÅRLIGSTE</div>
+            <div className="cell">GENNEMSNIT</div>
+            <div className="cell">ANTAL FF</div>
+            <div className="cell">LOG</div>
+            <div className="cell">FJERN BOY</div>
+          </div>
+
+          {ranked.length === 0 && (
+            <div className="empty-state">Ingen deltagere — tilføj din første boy nedenfor</div>
+          )}
+
+          {ranked.map((p, idx) => (
+            <Row
+              key={p.id}
+              person={p}
+              rank={idx + 1}
+              isLeader={p.id === leaderId}
+              onOpenHistory={(id) => setOpenHistory(id === openHistory ? null : id)}
+              openHistory={openHistory}
+              onCloseHistory={() => setOpenHistory(null)}
+              onDeleteEntry={deleteEntry}
+              onRemovePerson={removePerson}
+            />
+          ))}
         </div>
 
-        {ranked.length === 0 && (
-          <div className="empty-state">Ingen deltagere — tilføj din første boy nedenfor</div>
-        )}
-
-        {ranked.map((p, idx) => (
-          <Row
-            key={p.id}
-            person={p}
-            rank={idx + 1}
-            isLeader={p.id === leaderId}
-            onOpenHistory={(id) => setOpenHistory(id === openHistory ? null : id)}
-            openHistory={openHistory}
-            onCloseHistory={() => setOpenHistory(null)}
-            onDeleteEntry={deleteEntry}
-            onRemovePerson={removePerson}
-          />
-        ))}
+        <div className="mobile-board">
+          {ranked.length === 0 && (
+            <div className="empty-state">Ingen deltagere — tilføj din første boy nedenfor</div>
+          )}
+          {ranked.map((p, idx) => (
+            <MobileCard
+              key={p.id}
+              person={p}
+              rank={idx + 1}
+              isLeader={p.id === leaderId}
+              onOpenHistory={(id) => setOpenHistory(id === openHistory ? null : id)}
+              openHistory={openHistory}
+              onCloseHistory={() => setOpenHistory(null)}
+              onDeleteEntry={deleteEntry}
+              onRemovePerson={removePerson}
+            />
+          ))}
+        </div>
 
         <div className="addrow">
           <span className="hint">+ TILFØJ DELTAGER →</span>
@@ -995,22 +1237,35 @@ function App() {
       {/* LOG BAR */}
       <div className="logbar">
         <div className="label"><span className="pulse"></span>LOG FF →</div>
+        <div className="logbar-current">Valgt: <b>{selectedPersonName}</b></div>
         <select value={selectedId} onChange={e => setSelectedId(e.target.value)}>
           {people.length === 0 && <option value="">— ingen boys —</option>}
           {people.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={timeInput}
-          placeholder="0.00"
-          onChange={e => setTimeInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') logTime(); }}
-        />
-        <span className="seclabel">sek</span>
+        <div className="logbar-time">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={timeInput}
+            placeholder="0.00"
+            onChange={e => setTimeInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') logTime(); }}
+          />
+          <span className="seclabel">sek</span>
+        </div>
         <button className="btn" onClick={logTime}>LOG TID</button>
         <button className="btn dnf" onClick={logDNF}>DNF</button>
-        <div className="spacer"></div>
+        <div className="logbar-people" role="listbox" aria-label="Hurtigt valg af deltager">
+          {ranked.map((p) => (
+            <button
+              key={`chip-${p.id}`}
+              className={`person-chip ${selectedId === p.id ? 'active' : ''}`}
+              onClick={() => setSelectedId(p.id)}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
         <div className="meta">{people.reduce((acc, p) => acc + (entries[p.id]?.length || 0), 0)} FFs i alt</div>
       </div>
 
