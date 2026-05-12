@@ -1090,10 +1090,6 @@ const ROTATION_INTERVAL_MS = 30000;
     });
   };
 
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const saveData = Boolean(navigator.connection && navigator.connection.saveData);
-  const dynamicEnabled = BG_IMAGES.length > 1 && !prefersReducedMotion && !saveData;
-
   const setSlide = (el, src) => {
     el.style.backgroundImage = `url("${src}")`;
   };
@@ -1104,7 +1100,7 @@ const ROTATION_INTERVAL_MS = 30000;
   setSlide(active, BG_IMAGES[index]);
   active.classList.add('active');
 
-  if (!dynamicEnabled) return;
+  if (BG_IMAGES.length < 2) return;
 
   const rotate = async () => {
     const nextIndex = (index + 1) % BG_IMAGES.length;
