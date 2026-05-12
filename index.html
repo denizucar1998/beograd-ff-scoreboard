@@ -34,7 +34,7 @@
   .bg-slideshow{
     position:fixed;
     inset:0;
-    z-index:-3;
+    z-index:0;
     pointer-events:none;
     overflow:hidden;
     background:#0f0b08;
@@ -56,7 +56,7 @@
   .bg-overlay{
     position:fixed;
     inset:0;
-    z-index:-2;
+    z-index:1;
     pointer-events:none;
     background:
       linear-gradient(180deg, rgba(10,8,6,.52), rgba(10,8,6,.66)),
@@ -71,7 +71,7 @@
     max-width:1400px;
     margin:20px auto 0;
     padding:32px 36px 140px;
-    background-color:rgba(239,230,211,.92);
+    background-color:rgba(239,230,211,.9);
     background-image:
       radial-gradient(circle at 20% 30%, rgba(22,17,13,.035) 0 1px, transparent 1.5px),
       radial-gradient(circle at 70% 80%, rgba(22,17,13,.03) 0 1px, transparent 1.5px),
@@ -80,6 +80,7 @@
     border:1px solid rgba(22,17,13,.35);
     box-shadow:0 18px 38px rgba(0,0,0,.35);
     position:relative;
+    z-index:2;
   }
 
   /* ---------- HEADER ---------- */
@@ -369,7 +370,7 @@
     justify-content:center;
   }
   .ffcount small{
-    display:block;font-family:'JetBrains Mono',monospace;font-size:9px;
+    display:block;font-family:'JetBrains Mono',monospace;font-size:12px;
     letter-spacing:.14em;color:var(--red);margin-top:2px;font-weight:500;
   }
   .actions{justify-content:flex-end;gap:6px;flex-wrap:nowrap}
