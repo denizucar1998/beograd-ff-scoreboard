@@ -25,42 +25,18 @@
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
-    background:#0f0b08;
+    background-color:#0f0b08;
+    background-image:
+      linear-gradient(180deg, rgba(10,8,6,.4), rgba(10,8,6,.62)),
+      url('assets/beograd-bg/IMG_9585.jpg');
+    background-position:center;
+    background-size:cover;
+    background-repeat:no-repeat;
+    background-attachment:fixed;
     color:var(--ink);
     font-family:'Inter',system-ui,sans-serif;
     min-height:100vh;
     overflow-x:hidden;
-  }
-  .bg-slideshow{
-    position:fixed;
-    inset:0;
-    z-index:0;
-    pointer-events:none;
-    overflow:hidden;
-    background:#0f0b08;
-  }
-  .bg-slide{
-    position:absolute;
-    inset:0;
-    background-size:cover;
-    background-position:center;
-    opacity:0;
-    transform:scale(1.04);
-    transition:opacity 1.2s ease-in-out, transform 30s linear;
-    will-change:opacity,transform;
-  }
-  .bg-slide.active{
-    opacity:1;
-    transform:scale(1.1);
-  }
-  .bg-overlay{
-    position:fixed;
-    inset:0;
-    z-index:1;
-    pointer-events:none;
-    background:
-      linear-gradient(180deg, rgba(10,8,6,.52), rgba(10,8,6,.66)),
-      radial-gradient(circle at 22% 18%, rgba(0,0,0,.05), rgba(0,0,0,.45) 72%);
   }
   .display{font-family:'Anton','Archivo Narrow',sans-serif;letter-spacing:.02em;font-weight:400}
   .mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
@@ -71,17 +47,11 @@
     max-width:1400px;
     margin:20px auto 0;
     padding:32px 36px 140px;
-    background-color:rgba(239,230,211,.78);
-    background-image:
-      radial-gradient(circle at 20% 30%, rgba(22,17,13,.035) 0 1px, transparent 1.5px),
-      radial-gradient(circle at 70% 80%, rgba(22,17,13,.03) 0 1px, transparent 1.5px),
-      radial-gradient(circle at 40% 60%, rgba(22,17,13,.025) 0 1px, transparent 1.5px);
-    background-size:7px 7px, 11px 11px, 5px 5px;
+    background-color:rgba(239,230,211,.58);
     border:1px solid rgba(22,17,13,.35);
     box-shadow:0 18px 38px rgba(0,0,0,.35);
     position:relative;
-    z-index:2;
-    backdrop-filter:blur(1.5px);
+    backdrop-filter:blur(2px);
   }
 
   /* ---------- HEADER ---------- */
@@ -636,13 +606,6 @@
 </style>
 </head>
 <body>
-
-<div class="bg-slideshow" aria-hidden="true">
-  <div class="bg-slide bg-slide-a active"></div>
-  <div class="bg-slide bg-slide-b"></div>
-</div>
-<div class="bg-overlay" aria-hidden="true"></div>
-
 <div id="root"></div>
 
 <!-- React -->
@@ -1058,70 +1021,6 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
-</script>
-<script>
-const BG_IMAGES = [
-  'assets/beograd-bg/IMG_5734.jpg',
-  'assets/beograd-bg/IMG_5735.jpg',
-  'assets/beograd-bg/IMG_5736.jpg',
-  'assets/beograd-bg/IMG_5737.jpg',
-  'assets/beograd-bg/IMG_5739.jpg',
-  'assets/beograd-bg/IMG_5740.jpg',
-  'assets/beograd-bg/IMG_5741.jpg',
-  'assets/beograd-bg/IMG_5742.jpg',
-  'assets/beograd-bg/IMG_9585.jpg',
-  'assets/beograd-bg/IMG_9598.jpg',
-  'assets/beograd-bg/IMG_1844.jpg'
-];
-const ROTATION_INTERVAL_MS = 30000;
-
-(() => {
-  const slideA = document.querySelector('.bg-slide-a');
-  const slideB = document.querySelector('.bg-slide-b');
-  if (!slideA || !slideB || BG_IMAGES.length === 0) return;
-
-  const loadImage = (src) => {
-    if (!src) return Promise.resolve();
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = resolve;
-      img.onerror = resolve;
-      img.src = src;
-    });
-  };
-
-  const setSlide = (el, src) => {
-    el.style.backgroundImage = `url("${src}")`;
-  };
-
-  let index = 0;
-  let active = slideA;
-  let standby = slideB;
-  setSlide(active, BG_IMAGES[index]);
-  active.classList.add('active');
-
-  if (BG_IMAGES.length < 2) return;
-
-  const rotate = async () => {
-    const nextIndex = (index + 1) % BG_IMAGES.length;
-    const nextSrc = BG_IMAGES[nextIndex];
-    await loadImage(nextSrc);
-    setSlide(standby, nextSrc);
-    standby.classList.add('active');
-    active.classList.remove('active');
-    const previous = active;
-    active = standby;
-    standby = previous;
-    index = nextIndex;
-  };
-
-  // Preload the immediate next image only.
-  loadImage(BG_IMAGES[(index + 1) % BG_IMAGES.length]);
-
-  setInterval(() => {
-    rotate();
-  }, ROTATION_INTERVAL_MS);
-})();
 </script>
 </body>
 </html>
