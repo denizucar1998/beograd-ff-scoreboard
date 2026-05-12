@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>BEOGRAD ′26 — FF Scoreboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#efe6d3;
+    --paper-2:#e6dcc4;
+    --ink:#16110d;
+    --ink-soft:#3a2f25;
+    --red:#cf2418;
+    --red-deep:#9a1a12;
+    --cobalt:#1e3aa8;
+    --mustard:#e0a82e;
+    --line:rgba(22,17,13,.18);
+    --line-strong:rgba(22,17,13,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:#0f0b08;
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .bg-slideshow{
+    position:fixed;
+    inset:0;
+    z-index:-3;
+    pointer-events:none;
+    overflow:hidden;
+    background:#0f0b08;
+  }
+  .bg-slide{
+    position:absolute;
+    inset:0;
+    background-size:cover;
+    background-position:center;
+    opacity:0;
+    transform:scale(1.04);
+    transition:opacity 1.2s ease-in-out, transform 30s linear;
+    will-change:opacity,transform;
+  }
+  .bg-slide.active{
+    opacity:1;
+    transform:scale(1.1);
+  }
+  .bg-overlay{
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    pointer-events:none;
+    background:
+      linear-gradient(180deg, rgba(10,8,6,.52), rgba(10,8,6,.66)),
+      radial-gradient(circle at 22% 18%, rgba(0,0,0,.05), rgba(0,0,0,.45) 72%);
+  }
+  .display{font-family:'Anton','Archivo Narrow',sans-serif;letter-spacing:.02em;font-weight:400}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+  .uppercase{text-transform:uppercase}
+
+  /* ---------- LAYOUT ---------- */
+  .frame{
+    max-width:1400px;
+    margin:20px auto 0;
+    padding:32px 36px 140px;
+    background-color:rgba(239,230,211,.92);
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(22,17,13,.035) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 70% 80%, rgba(22,17,13,.03) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 40% 60%, rgba(22,17,13,.025) 0 1px, transparent 1.5px);
+    background-size:7px 7px, 11px 11px, 5px 5px;
+    border:1px solid rgba(22,17,13,.35);
+    box-shadow:0 18px 38px rgba(0,0,0,.35);
+    position:relative;
+  }
+
+  /* ---------- HEADER ---------- */
+  .topbar{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:32px;
+    padding-bottom:18px;
+    border-bottom:3px solid var(--ink);
+    position:relative;
+  }
+  .topbar::after{
+    content:"";
+    position:absolute;
+    left:0;right:0;bottom:-9px;
+    border-bottom:1px solid var(--ink);
+  }
+  .brand{display:flex;align-items:flex-end;gap:22px}
+  .brand-stamp{
+    width:96px;height:96px;
+    border:2.5px solid var(--red);
+    border-radius:50%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--red);
+    text-align:center;
+    transform:rotate(-7deg);
+    flex-shrink:0;
+    position:relative;
+    background:rgba(207,36,24,.04);
+  }
+  .brand-stamp .ring{
+    position:absolute;inset:5px;
+    border:1px dashed var(--red);
+    border-radius:50%;
+    opacity:.55;
+  }
+  .brand-stamp .top{font-family:'Anton',sans-serif;font-size:11px;letter-spacing:.12em}
+  .brand-stamp .big{font-family:'Anton',sans-serif;font-size:26px;line-height:1;margin:2px 0}
+  .brand-stamp .bot{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em}
+  .wordmark h1{
+    font-family:'Anton',sans-serif;
+    font-size:78px;
+    line-height:.88;
+    margin:0;
+    letter-spacing:.005em;
+  }
+  .wordmark h1 .ru{color:var(--red);margin-right:18px}
+  .wordmark .sub{
+    display:flex;gap:18px;align-items:center;
+    margin-top:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .wordmark .sub b{color:var(--ink);font-weight:700}
+  .wordmark .sub .dot{width:5px;height:5px;background:var(--ink);border-radius:50%;display:inline-block}
+
+  .topbar-right{
+    text-align:right;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    line-height:1.5;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+  }
+  .topbar-right .doc{
+    font-family:'Anton',sans-serif;
+    font-size:22px;
+    color:var(--ink);
+    letter-spacing:.04em;
+    margin-bottom:4px;
+  }
+  .topbar-right .doc .red{color:var(--red)}
+
+  /* ---------- TICKER ---------- */
+  .ticker{
+    margin-top:14px;
+    display:flex;
+    align-items:center;
+    gap:24px;
+    padding:8px 14px;
+    border:1px solid var(--line-strong);
+    background:rgba(22,17,13,.04);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    overflow:hidden;
+  }
+  .ticker .tag{
+    background:var(--ink);color:var(--paper);
+    padding:3px 7px;
+    font-weight:700;
+    letter-spacing:.16em;
+    flex-shrink:0;
+  }
+  .ticker .scroll{
+    display:flex;gap:36px;white-space:nowrap;animation:slide 38s linear infinite;
+  }
+  .ticker .scroll span b{color:var(--ink);font-weight:700}
+  @keyframes slide{
+    from{transform:translateX(0)}
+    to{transform:translateX(-50%)}
+  }
+
+  /* ---------- PODIUM ---------- */
+  .podium{
+    margin-top:28px;
+    display:grid;
+    grid-template-columns:1fr 1.15fr 1fr;
+    gap:14px;
+    align-items:end;
+  }
+  .pcard{
+    border:2px solid var(--ink);
+    background:var(--paper-2);
+    padding:18px 20px 20px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-height:170px;
+  }
+  .pcard.gold{
+    background:var(--ink);
+    color:var(--paper);
+    min-height:210px;
+    border-color:var(--ink);
+  }
+  .pcard.gold .plabel,.pcard.gold .ptime small{color:rgba(239,230,211,.65)}
+  .pcard .medal{
+    position:absolute;top:-14px;left:-14px;
+    width:46px;height:46px;
+    background:var(--red);color:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Anton',sans-serif;font-size:26px;
+    border:2px solid var(--ink);
+    transform:rotate(-6deg);
+  }
+  .pcard.gold .medal{background:var(--mustard);color:var(--ink);font-size:30px;width:54px;height:54px;top:-18px;left:-18px}
+  .pcard .plabel{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:.2em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+  .pcard .pname{
+    font-family:'Anton',sans-serif;
+    font-size:38px;
+    line-height:.95;
+    margin-top:6px;
+  }
+  .pcard.gold .pname{font-size:54px}
+  .pcard .ptime{
+    margin-top:auto;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:34px;
+    line-height:1;
+  }
+  .pcard.gold .ptime{font-size:46px;color:var(--mustard)}
+  .pcard .ptime small{font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:4px;color:var(--ink-soft)}
+  .pcard.empty{opacity:.4;background:transparent;border-style:dashed}
+  .pcard.empty .pname{color:var(--ink-soft)}
+
+  /* ---------- TABLE ---------- */
+  .section-head{
+    margin:36px 0 12px;
+    display:flex;align-items:center;justify-content:space-between;gap:24px;
+  }
+  .section-head h2{
+    font-family:'Anton',sans-serif;
+    font-size:36px;
+    margin:0;
+    letter-spacing:.03em;
+  }
+  .section-head h2 .sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:.18em;color:var(--ink-soft);
+    margin-left:14px;font-weight:500;
+  }
+  .sort-filter{
+    display:flex;align-items:center;gap:8px;
+  }
+  .sort-filter .sort-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:.18em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    margin-right:4px;
+  }
+  .sort-btn{
+    border:1.5px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+    font-family:'Anton',sans-serif;
+    font-size:16px;
+    letter-spacing:.04em;
+    padding:7px 14px 6px;
+    cursor:pointer;
+    transition:all .12s;
+    text-transform:uppercase;
+  }
+  .sort-btn:hover{background:rgba(22,17,13,.08)}
+  .sort-btn.active{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .sort-btn.active::before{
+    content:"↓ ";
+    color:var(--mustard);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    margin-right:4px;
+  }
+
+  .scoreboard{
+    border:2.5px solid var(--ink);
+    background:var(--paper-2);
+    overflow:hidden;
+  }
+  .row{
+    display:grid;
+    grid-template-columns:60px minmax(180px,1.4fr) 1fr 1fr 1fr 90px 80px 120px;
+    align-items:stretch;
+    border-bottom:1px solid var(--line);
+  }
+  .row:last-child{border-bottom:none}
+  .row.head{
+    background:var(--ink);color:var(--paper);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  }
+  .row.head .cell{padding:12px 14px;border-right:1px solid rgba(239,230,211,.18)}
+  .row.head .cell:last-child{border-right:none}
+  .cell{
+    padding:14px 14px;
+    display:flex;align-items:center;gap:8px;
+    border-right:1px solid var(--line);
+    min-width:0;
+  }
+  .cell:last-child{border-right:none}
+  .row.body{transition:background .15s}
+  .row.body:hover{background:rgba(22,17,13,.04)}
+  .row.body.leader{background:linear-gradient(90deg, rgba(224,168,46,.18), rgba(224,168,46,0) 60%)}
+  .rank{
+    font-family:'Anton',sans-serif;
+    font-size:38px;line-height:1;
+    color:var(--ink);
+    justify-content:center;
+  }
+  .rank .hash{font-size:14px;color:var(--ink-soft);margin-right:1px;vertical-align:top}
+  .row.body.leader .rank{color:var(--red)}
+  .name{
+    font-family:'Anton',sans-serif;
+    font-size:26px;
+    line-height:1;
+    letter-spacing:.01em;
+  }
+  .name .tag{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;letter-spacing:.14em;
+    background:var(--ink);color:var(--paper);
+    padding:2px 5px;margin-left:8px;
+    vertical-align:middle;
+    text-transform:uppercase;
+  }
+  .stat{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:22px;
+    color:var(--ink);
+  }
+  .stat .unit{font-size:11px;color:var(--ink-soft);font-weight:500;margin-left:3px}
+  .stat.dim{color:var(--ink-soft);font-weight:500;font-size:14px}
+  .stat.red{color:var(--red)}
+  .stat.green{color:#0f6a3f}
+  .ffcount{
+    font-family:'Anton',sans-serif;
+    font-size:30px;
+    line-height:1;
+    justify-content:center;
+  }
+  .ffcount small{
+    display:block;font-family:'JetBrains Mono',monospace;font-size:9px;
+    letter-spacing:.14em;color:var(--red);margin-top:2px;font-weight:500;
+  }
+  .actions{justify-content:flex-end;gap:6px;flex-wrap:nowrap}
+  .iconbtn{
+    border:1.5px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:.14em;
+    padding:6px 10px;
+    cursor:pointer;
+    text-transform:uppercase;
+    font-weight:700;
+    transition:all .12s;
+  }
+  .iconbtn:hover{background:var(--ink);color:var(--paper)}
+  .iconbtn.danger{border-color:var(--red);color:var(--red)}
+  .iconbtn.danger:hover{background:var(--red);color:var(--paper)}
+  .iconbtn.primary{background:var(--red);color:var(--paper);border-color:var(--red)}
+  .iconbtn.primary:hover{background:var(--red-deep);border-color:var(--red-deep)}
+
+  /* ---------- ADD ROW ---------- */
+  .addrow{
+    display:flex;align-items:center;gap:10px;
+    padding:14px 16px;
+    background:rgba(22,17,13,.06);
+    border-top:2px dashed var(--line-strong);
+  }
+  .addrow input{
+    background:var(--paper);
+    border:1.5px solid var(--ink);
+    padding:8px 12px;
+    font-family:'Anton',sans-serif;
+    font-size:20px;
+    letter-spacing:.02em;
+    color:var(--ink);
+    flex:1;
+    max-width:300px;
+    outline:none;
+  }
+  .addrow .hint{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:.16em;color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+
+  /* ---------- LOG BAR ---------- */
+  .logbar{
+    position:fixed;left:0;right:0;bottom:0;
+    background:var(--ink);
+    color:var(--paper);
+    border-top:3px solid var(--red);
+    padding:14px 36px;
+    display:flex;align-items:center;gap:14px;
+    z-index:30;
+  }
+  .logbar .label{
+    font-family:'Anton',sans-serif;
+    font-size:24px;
+    letter-spacing:.04em;
+    color:var(--paper);
+    display:flex;align-items:center;gap:10px;
+  }
+  .logbar .label .pulse{
+    width:10px;height:10px;background:var(--red);border-radius:50%;
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{transform:scale(1);opacity:1}
+    50%{transform:scale(1.5);opacity:.5}
+  }
+  .logbar select,.logbar input{
+    background:transparent;
+    border:1.5px solid rgba(239,230,211,.4);
+    color:var(--paper);
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    padding:10px 12px;
+    font-size:16px;
+    outline:none;
+  }
+  .logbar select{font-family:'Anton',sans-serif;font-size:20px;font-weight:400;letter-spacing:.02em;min-width:170px}
+  .logbar select option{background:var(--ink);color:var(--paper)}
+  .logbar input{width:140px;text-align:center}
+  .logbar input::placeholder{color:rgba(239,230,211,.4)}
+  .logbar .seclabel{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;color:rgba(239,230,211,.55);text-transform:uppercase;margin-left:-6px}
+  .logbar .btn{
+    font-family:'Anton',sans-serif;
+    font-size:22px;
+    letter-spacing:.06em;
+    padding:10px 22px;
+    border:none;
+    cursor:pointer;
+    background:var(--red);
+    color:var(--paper);
+    transition:background .12s;
+  }
+  .logbar .btn:hover{background:var(--mustard);color:var(--ink)}
+  .logbar .btn.dnf{background:transparent;border:1.5px solid rgba(239,230,211,.4);color:var(--paper)}
+  .logbar .btn.dnf:hover{background:var(--red-deep);border-color:var(--red-deep);color:var(--paper)}
+  .logbar .spacer{flex:1}
+  .logbar .meta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:.16em;
+    color:rgba(239,230,211,.5);
+    text-transform:uppercase;
+  }
+
+  /* ---------- HISTORY POPOVER ---------- */
+  .history-wrap{position:relative}
+  .history-pop{
+    position:absolute;right:0;top:calc(100% + 6px);
+    width:280px;
+    background:var(--paper);
+    border:2px solid var(--ink);
+    z-index:20;
+    padding:10px 12px;
+    box-shadow:6px 6px 0 var(--ink);
+  }
+  .history-pop h4{
+    font-family:'Anton',sans-serif;font-size:18px;margin:0 0 8px;letter-spacing:.04em;
+    border-bottom:1px solid var(--line);padding-bottom:6px;
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .history-pop h4 small{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-soft);letter-spacing:.14em;
+  }
+  .history-list{
+    max-height:240px;overflow-y:auto;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .history-list .item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:5px 6px;
+    background:var(--paper-2);
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;font-weight:700;
+  }
+  .history-list .item.dnf{color:var(--red)}
+  .history-list .item .ts{font-size:9px;font-weight:500;color:var(--ink-soft);letter-spacing:.1em}
+  .history-list .item button{
+    background:none;border:none;color:var(--red);cursor:pointer;
+    font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 4px;font-weight:700;
+  }
+  .history-list .item button:hover{background:var(--red);color:var(--paper)}
+  .history-list .empty{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;
+    color:var(--ink-soft);text-align:center;padding:14px 0;text-transform:uppercase;
+  }
+
+  /* ---------- TOAST ---------- */
+  .toast{
+    position:fixed;
+    bottom:90px;left:50%;transform:translateX(-50%);
+    background:var(--mustard);
+    color:var(--ink);
+    border:2px solid var(--ink);
+    padding:10px 18px;
+    font-family:'Anton',sans-serif;
+    font-size:20px;letter-spacing:.04em;
+    z-index:40;
+    box-shadow:5px 5px 0 var(--ink);
+    animation:toastin .3s ease-out;
+  }
+  .toast.dnf{background:var(--red);color:var(--paper)}
+  @keyframes toastin{
+    from{transform:translate(-50%,20px);opacity:0}
+    to{transform:translate(-50%,0);opacity:1}
+  }
+
+  /* ---------- FOOTER STRIP ---------- */
+  .stripes{
+    margin-top:28px;
+    height:14px;
+    background:repeating-linear-gradient(
+      135deg,
+      var(--ink) 0 12px,
+      var(--paper) 12px 24px,
+      var(--red) 24px 36px,
+      var(--paper) 36px 48px
+    );
+    border-top:1px solid var(--ink);
+    border-bottom:1px solid var(--ink);
+  }
+  .footnote{
+    margin-top:14px;
+    display:flex;justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:.18em;color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+  .footnote .stamp{
+    border:1.5px solid var(--ink-soft);padding:4px 8px;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- EMPTY STATE ---------- */
+  .empty-state{
+    padding:40px;text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;letter-spacing:.16em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+
+  @media(max-width:1100px){
+    .row{grid-template-columns:48px minmax(140px,1.2fr) 1fr 1fr 1fr 70px 70px 100px}
+    .wordmark h1{font-size:56px}
+    .pcard.gold .pname{font-size:42px}
+    .pcard .pname{font-size:30px}
+  }
+  @media(max-width:900px){
+    .frame{
+      margin:0;
+      border-left:none;
+      border-right:none;
+      padding:20px 14px 170px;
+      box-shadow:none;
+    }
+    .topbar{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:18px;
+    }
+    .topbar-right{text-align:left}
+    .wordmark h1{font-size:44px}
+    .wordmark .sub{flex-wrap:wrap;gap:8px}
+    .podium{grid-template-columns:1fr}
+    .logbar{
+      padding:12px;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .logbar .label{
+      width:100%;
+      font-size:18px;
+    }
+    .logbar select{
+      min-width:0;
+      flex:1;
+    }
+    .logbar input{width:96px}
+    .logbar .meta{width:100%}
+  }
+  @media(max-width:700px){
+    .row{grid-template-columns:40px minmax(120px,1fr) 1fr 1fr 1fr 60px 78px 92px}
+    .rank{font-size:30px}
+    .name{font-size:20px}
+    .stat{font-size:18px}
+    .ffcount{font-size:24px}
+    .addrow{
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .addrow input{
+      width:100%;
+      max-width:none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-slideshow" aria-hidden="true">
+  <div class="bg-slide bg-slide-a active"></div>
+  <div class="bg-slide bg-slide-b"></div>
+</div>
+<div class="bg-overlay" aria-hidden="true"></div>
+
+<div id="root"></div>
+
+<!-- React -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+
+// ---------- STORAGE ----------
+const STORAGE_KEY = 'beograd-ff-scoreboard-v1';
+
+const DEFAULT_PEOPLE = [
+  { id: 'p1', name: 'Dalle' },
+  { id: 'p2', name: 'Deniz' },
+  { id: 'p3', name: 'Ulle' },
+  { id: 'p4', name: 'Sebastian Jensen' },
+  { id: 'p5', name: 'Frede' },
+  { id: 'p6', name: 'Thom' },
+  { id: 'p7', name: 'Jenne' },
+  { id: 'p8', name: 'Hans' },
+  { id: 'p9', name: 'Jonas P' },
+];
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { people: DEFAULT_PEOPLE, entries: {} };
+    const parsed = JSON.parse(raw);
+    return {
+      people: parsed.people || DEFAULT_PEOPLE,
+      entries: parsed.entries || {},
+    };
+  } catch (e) {
+    return { people: DEFAULT_PEOPLE, entries: {} };
+  }
+}
+
+function saveState(state) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+// ---------- STATS ----------
+function statsFor(entries) {
+  const list = entries || [];
+  const completed = list.filter(e => !e.dnf).map(e => e.time);
+  const dnfCount = list.filter(e => e.dnf).length;
+  const fastest = completed.length ? Math.min(...completed) : null;
+  const worst = completed.length ? Math.max(...completed) : null;
+  const avg = completed.length ? completed.reduce((a, b) => a + b, 0) / completed.length : null;
+  return {
+    fastest, worst, avg,
+    ffCount: list.length, // includes DNFs
+    dnfCount,
+    completedCount: completed.length,
+  };
+}
+
+function fmt(t) {
+  if (t == null || Number.isNaN(t)) return '—';
+  return t.toFixed(2);
+}
+
+// ---------- COMPONENTS ----------
+function BrandStamp() {
+  return (
+    <div className="brand-stamp">
+      <div className="ring"></div>
+      <div className="top">REPUBLIKA</div>
+      <div className="big">FF·26</div>
+      <div className="bot">№ 001</div>
+    </div>
+  );
+}
+
+function Header({ count }) {
+  return (
+    <div>
+      <div className="topbar">
+        <div className="brand">
+          <BrandStamp />
+          <div className="wordmark">
+            <h1><span className="ru">БЕОГРАД</span><span>′26</span></h1>
+            <div className="sub">
+              <span>FF · Scoreboard</span>
+              <span className="dot"></span>
+              <span>Forlænget weekend</span>
+              <span className="dot"></span>
+              <span><b>{count}</b> boys</span>
+            </div>
+          </div>
+        </div>
+        <div className="topbar-right">
+          <div className="doc">DOSSIER<span className="red">.</span></div>
+          <div>CLASSIFIED · BOYS ONLY</div>
+          <div>FILED — MAY ′26</div>
+        </div>
+      </div>
+
+      <div className="ticker" aria-hidden="true">
+        <span className="tag">LIVE</span>
+        <div className="scroll">
+          <span>· EAT · DRINK · CHUG · REPEAT · NO DNFs · ONE LIFE ONE FF · SAVAMALA AFTER DARK · ČOKANJČIĆI HVER AFTEN · </span>
+          <span>· EAT · DRINK · CHUG · REPEAT · NO DNFs · ONE LIFE ONE FF · SAVAMALA AFTER DARK · ČOKANJČIĆI HVER AFTEN · </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Podium({ ranked, sortMode }) {
+  const slots = [ranked[1], ranked[0], ranked[2]]; // visual order: 2nd, 1st, 3rd
+  const cls = ['silver', 'gold', 'bronze'];
+  const medal = ['②', '①', '③'];
+  const key = sortMode === 'avg' ? 'avg' : 'fastest';
+  const label = sortMode === 'avg' ? 'GENNEMSNIT' : 'FASTEST';
+  const kapLabel = sortMode === 'avg' ? 'KAPETAN — BEDSTE SNIT' : 'KAPETAN — FASTEST FF';
+  return (
+    <div className="podium">
+      {slots.map((p, i) => (
+        <div key={i} className={`pcard ${cls[i]} ${!p || p.stats[key] == null ? 'empty' : ''}`}>
+          <div className="medal">{medal[i]}</div>
+          <div className="plabel">{i === 1 ? kapLabel : i === 0 ? 'Sølv · 2nd' : 'Bronze · 3rd'}</div>
+          <div className="pname">{p ? p.name : '—'}</div>
+          <div className="ptime">
+            <small>{label}</small>
+            {p && p.stats[key] != null ? `${fmt(p.stats[key])}s` : '—'}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HistoryPopover({ person, onClose, onDelete }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const onDoc = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) onClose();
+    };
+    setTimeout(() => document.addEventListener('mousedown', onDoc), 0);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [onClose]);
+
+  const entries = [...(person.entries || [])].sort((a, b) => b.ts - a.ts);
+
+  return (
+    <div className="history-pop" ref={ref} onClick={(e) => e.stopPropagation()}>
+      <h4>
+        <span>{person.name} · log</span>
+        <small>{entries.length} FF</small>
+      </h4>
+      <div className="history-list">
+        {entries.length === 0 && <div className="empty">no attempts yet</div>}
+        {entries.map(e => (
+          <div key={e.id} className={`item ${e.dnf ? 'dnf' : ''}`}>
+            <span>{e.dnf ? 'DNF' : `${e.time.toFixed(2)}s`}</span>
+            <span className="ts">{new Date(e.ts).toLocaleString('da-DK', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>
+            <button onClick={() => onDelete(e.id)} title="Slet">✕</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Row({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistory, onDeleteEntry, onRemovePerson }) {
+  const s = person.stats;
+  return (
+    <div className={`row body ${isLeader ? 'leader' : ''}`}>
+      <div className="cell rank">
+        <span><span className="hash">№</span>{rank}</span>
+      </div>
+      <div className="cell name">
+        {person.name}
+        {isLeader && <span className="tag">KAPETAN</span>}
+      </div>
+      <div className="cell stat green">
+        {s.fastest != null ? <>{fmt(s.fastest)}<span className="unit">s</span></> : <span className="dim">—</span>}
+      </div>
+      <div className="cell stat red">
+        {s.worst != null ? <>{fmt(s.worst)}<span className="unit">s</span></> : <span className="dim">—</span>}
+      </div>
+      <div className="cell stat">
+        {s.avg != null ? <>{fmt(s.avg)}<span className="unit">s</span></> : <span className="dim">—</span>}
+      </div>
+      <div className="cell ffcount">
+        {s.ffCount}
+        {s.dnfCount > 0 && <small>{s.dnfCount} DNF</small>}
+      </div>
+      <div className="cell actions">
+        <div className="history-wrap">
+          <button className="iconbtn" onClick={() => onOpenHistory(person.id)}>Log</button>
+          {openHistory === person.id && (
+            <HistoryPopover person={person} onClose={onCloseHistory} onDelete={(eid) => onDeleteEntry(person.id, eid)} />
+          )}
+        </div>
+      </div>
+      <div className="cell actions">
+        <button className="iconbtn danger" onClick={() => {
+          if (confirm(`Fjern ${person.name} fra scoreboardet?\n(Alle tider slettes)`)) onRemovePerson(person.id);
+        }}>Fjern Boy</button>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [{ people, entries }, setState] = useState(loadState());
+  const [newName, setNewName] = useState('');
+  const [selectedId, setSelectedId] = useState('');
+  const [timeInput, setTimeInput] = useState('');
+  const [openHistory, setOpenHistory] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [sortMode, setSortMode] = useState('fastest'); // 'fastest' | 'avg'
+
+  // Persist
+  useEffect(() => { saveState({ people, entries }); }, [people, entries]);
+
+  // Default selected
+  useEffect(() => {
+    if (!selectedId && people.length) setSelectedId(people[0].id);
+  }, [people, selectedId]);
+
+  const showToast = (msg, kind) => {
+    setToast({ msg, kind });
+    setTimeout(() => setToast(null), 1900);
+  };
+
+  // Computed: people with stats, ranked
+  const peopleWithStats = useMemo(() => {
+    return people.map(p => ({
+      ...p,
+      entries: entries[p.id] || [],
+      stats: statsFor(entries[p.id] || []),
+    }));
+  }, [people, entries]);
+
+  const ranked = useMemo(() => {
+    const arr = [...peopleWithStats];
+    const key = sortMode === 'avg' ? 'avg' : 'fastest';
+    const tie = sortMode === 'avg' ? 'fastest' : 'avg';
+    arr.sort((a, b) => {
+      const av = a.stats[key], bv = b.stats[key];
+      if (av == null && bv == null) return a.name.localeCompare(b.name);
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (av !== bv) return av - bv;
+      const at = a.stats[tie], bt = b.stats[tie];
+      if (at !== bt) return (at ?? 999) - (bt ?? 999);
+      return a.name.localeCompare(b.name);
+    });
+    return arr;
+  }, [peopleWithStats, sortMode]);
+
+  // Actions
+  const addPerson = (name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const id = 'p' + Date.now() + '_' + Math.floor(Math.random() * 999);
+    setState(s => ({ ...s, people: [...s.people, { id, name: trimmed }] }));
+    setNewName('');
+    showToast(`+ ${trimmed} på listen`);
+  };
+
+  const removePerson = (id) => {
+    setState(s => {
+      const next = { ...s.entries };
+      delete next[id];
+      return { people: s.people.filter(p => p.id !== id), entries: next };
+    });
+    if (selectedId === id) setSelectedId('');
+  };
+
+  const logTime = () => {
+    if (!selectedId) return;
+    const num = parseFloat(timeInput.replace(',', '.'));
+    if (!Number.isFinite(num) || num <= 0) {
+      showToast('Ugyldig tid', 'dnf');
+      return;
+    }
+    const rounded = Math.round(num * 100) / 100;
+    const e = { id: 't' + Date.now(), time: rounded, dnf: false, ts: Date.now() };
+    setState(s => ({
+      ...s,
+      entries: { ...s.entries, [selectedId]: [...(s.entries[selectedId] || []), e] },
+    }));
+    setTimeInput('');
+    const p = people.find(x => x.id === selectedId);
+    showToast(`${p?.name}: ${rounded.toFixed(2)}s`);
+  };
+
+  const logDNF = () => {
+    if (!selectedId) return;
+    const e = { id: 't' + Date.now(), time: null, dnf: true, ts: Date.now() };
+    setState(s => ({
+      ...s,
+      entries: { ...s.entries, [selectedId]: [...(s.entries[selectedId] || []), e] },
+    }));
+    setTimeInput('');
+    const p = people.find(x => x.id === selectedId);
+    showToast(`${p?.name}: DNF`, 'dnf');
+  };
+
+  const deleteEntry = (personId, entryId) => {
+    setState(s => ({
+      ...s,
+      entries: { ...s.entries, [personId]: (s.entries[personId] || []).filter(e => e.id !== entryId) },
+    }));
+  };
+
+  const leaderId = ranked[0]?.stats?.[sortMode === 'avg' ? 'avg' : 'fastest'] != null ? ranked[0].id : null;
+
+  return (
+    <div className="frame">
+      <Header count={people.length} />
+
+      <Podium ranked={ranked} sortMode={sortMode} />
+
+      <div className="section-head">
+        <h2>
+          GG BOYS<span className="sub">/ {people.length} REGISTRERET</span>
+        </h2>
+        <div className="sort-filter">
+          <span className="sort-label">SORTÉR EFTER</span>
+          <button
+            className={`sort-btn ${sortMode === 'fastest' ? 'active' : ''}`}
+            onClick={() => setSortMode('fastest')}
+          >Hurtigste tid</button>
+          <button
+            className={`sort-btn ${sortMode === 'avg' ? 'active' : ''}`}
+            onClick={() => setSortMode('avg')}
+          >Gennemsnitstid</button>
+        </div>
+      </div>
+
+      <div className="scoreboard">
+        <div className="row head">
+          <div className="cell">№</div>
+          <div className="cell">NAVN</div>
+          <div className="cell">HURTIGSTE</div>
+          <div className="cell">DÅRLIGSTE</div>
+          <div className="cell">GENNEMSNIT</div>
+          <div className="cell">ANTAL FF</div>
+          <div className="cell">LOG</div>
+          <div className="cell">FJERN BOY</div>
+        </div>
+
+        {ranked.length === 0 && (
+          <div className="empty-state">Ingen deltagere — tilføj din første boy nedenfor</div>
+        )}
+
+        {ranked.map((p, idx) => (
+          <Row
+            key={p.id}
+            person={p}
+            rank={idx + 1}
+            isLeader={p.id === leaderId}
+            onOpenHistory={(id) => setOpenHistory(id === openHistory ? null : id)}
+            openHistory={openHistory}
+            onCloseHistory={() => setOpenHistory(null)}
+            onDeleteEntry={deleteEntry}
+            onRemovePerson={removePerson}
+          />
+        ))}
+
+        <div className="addrow">
+          <span className="hint">+ TILFØJ DELTAGER →</span>
+          <input
+            type="text"
+            value={newName}
+            placeholder="Navn"
+            onChange={e => setNewName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') addPerson(newName); }}
+          />
+          <button className="iconbtn primary" onClick={() => addPerson(newName)}>TILFØJ</button>
+        </div>
+      </div>
+
+      <div className="stripes"></div>
+      <div className="footnote">
+        <span>· FF DOSSIER · BEOGRAD ′26 · STRICTLY CONFIDENTIAL ·</span>
+        <span className="stamp">PRINTED ON {new Date().toLocaleDateString('da-DK')}</span>
+      </div>
+
+      {/* LOG BAR */}
+      <div className="logbar">
+        <div className="label"><span className="pulse"></span>LOG FF →</div>
+        <select value={selectedId} onChange={e => setSelectedId(e.target.value)}>
+          {people.length === 0 && <option value="">— ingen boys —</option>}
+          {people.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={timeInput}
+          placeholder="0.00"
+          onChange={e => setTimeInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') logTime(); }}
+        />
+        <span className="seclabel">sek</span>
+        <button className="btn" onClick={logTime}>LOG TID</button>
+        <button className="btn dnf" onClick={logDNF}>DNF</button>
+        <div className="spacer"></div>
+        <div className="meta">{people.reduce((acc, p) => acc + (entries[p.id]?.length || 0), 0)} FFs i alt</div>
+      </div>
+
+      {toast && <div className={`toast ${toast.kind || ''}`}>{toast.msg}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+</script>
+<script>
+const BG_IMAGES = [
+  'assets/beograd-bg/IMG_5734.jpg',
+  'assets/beograd-bg/IMG_5735.jpg',
+  'assets/beograd-bg/IMG_5736.jpg',
+  'assets/beograd-bg/IMG_5737.jpg',
+  'assets/beograd-bg/IMG_5739.jpg',
+  'assets/beograd-bg/IMG_5740.jpg',
+  'assets/beograd-bg/IMG_5741.jpg',
+  'assets/beograd-bg/IMG_5742.jpg',
+  'assets/beograd-bg/IMG_9585.jpg',
+  'assets/beograd-bg/IMG_9598.jpg',
+  'assets/beograd-bg/IMG_1844.jpg'
+];
+
+(() => {
+  const slideA = document.querySelector('.bg-slide-a');
+  const slideB = document.querySelector('.bg-slide-b');
+  if (!slideA || !slideB || BG_IMAGES.length === 0) return;
+
+  const preload = (src) => {
+    const img = new Image();
+    img.src = src;
+  };
+  BG_IMAGES.forEach(preload);
+
+  let index = 0;
+  let active = slideA;
+  let standby = slideB;
+
+  const show = (el, src) => {
+    el.style.backgroundImage = `url("${src}")`;
+  };
+
+  show(active, BG_IMAGES[index]);
+
+  if (BG_IMAGES.length < 2) return;
+
+  setInterval(() => {
+    index = (index + 1) % BG_IMAGES.length;
+    show(standby, BG_IMAGES[index]);
+    standby.classList.add('active');
+    active.classList.remove('active');
+    const previous = active;
+    active = standby;
+    standby = previous;
+  }, 30000);
+})();
+</script>
+</body>
+</html>
