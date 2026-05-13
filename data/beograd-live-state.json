@@ -40,22 +40,15 @@
     ],
     "entries": {
       "p2": [],
-      "p1": [
-        {
-          "id": "t-1778694286443-ctpzzlr0",
-          "dnf": true,
-          "time": null,
-          "ts": 1778694286443
-        }
-      ],
+      "p1": [],
       "p5": [],
       "p9": [],
       "p3": [],
       "p6": []
     }
   },
-  "revision": 59,
-  "version": 59,
-  "updatedAt": "2026-05-13T17:44:46.530Z",
+  "revision": 60,
+  "version": 60,
+  "updatedAt": "2026-05-13T17:44:51.067Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
