@@ -718,12 +718,21 @@
       bottom:auto;
       transform:translateX(-50%);
       width:min(92vw, 340px);
-      max-height:62vh;
+      max-height:min(56vh, 420px);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
       z-index:120;
       box-shadow:0 10px 26px rgba(0,0,0,.42);
     }
+    .mobile-board .history-pop h4{
+      margin:0;
+      flex-shrink:0;
+    }
     .mobile-board .history-list{
-      max-height:50vh;
+      max-height:none;
+      flex:1;
+      min-height:0;
     }
 
     .logbar{
