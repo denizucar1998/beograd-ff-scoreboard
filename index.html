@@ -1031,14 +1031,29 @@ function HistoryPopover({ person, onClose, onDelete, mobileAnchor = null }) {
     }
 
     const place = () => {
-      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const viewport = window.visualViewport;
+      const viewportHeight = (viewport && Number.isFinite(viewport.height)) ? viewport.height : (window.innerHeight || document.documentElement.clientHeight || 0);
+      const viewportWidth = (viewport && Number.isFinite(viewport.width)) ? viewport.width : (window.innerWidth || document.documentElement.clientWidth || 0);
       const margin = 8;
       const popRect = ref.current.getBoundingClientRect();
       const popHeight = popRect.height || 320;
-      const anchorCenterY = (mobileAnchor.top + mobileAnchor.bottom) / 2;
+      const popWidth = popRect.width || 320;
+      const anchorCenterY = Number.isFinite(mobileAnchor.centerY)
+        ? mobileAnchor.centerY
+        : ((mobileAnchor.top + mobileAnchor.bottom) / 2);
+      const anchorCenterX = Number.isFinite(mobileAnchor.centerX)
+        ? mobileAnchor.centerX
+        : (viewportWidth / 2);
+
       let nextTop = anchorCenterY - (popHeight / 2);
+      let nextLeft = anchorCenterX - (popWidth / 2);
       nextTop = Math.max(margin, Math.min(nextTop, viewportHeight - popHeight - margin));
-      setMobileStyle({ top: `${Math.round(nextTop)}px` });
+      nextLeft = Math.max(margin, Math.min(nextLeft, viewportWidth - popWidth - margin));
+      setMobileStyle({
+        top: `${Math.round(nextTop)}px`,
+        left: `${Math.round(nextLeft)}px`,
+        transform: 'none',
+      });
     };
 
     place();
@@ -1214,16 +1229,27 @@ function App() {
     }
 
     setOpenHistory(id);
-    const isMobile = typeof window !== 'undefined'
-      && typeof window.matchMedia === 'function'
-      && window.matchMedia('(max-width: 900px)').matches;
-
-    if (isMobile && event?.currentTarget) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      setHistoryAnchor({ top: rect.top, bottom: rect.bottom });
-    } else {
+    if (!event) {
       setHistoryAnchor(null);
+      return;
     }
+
+    const rect = event.currentTarget?.getBoundingClientRect
+      ? event.currentTarget.getBoundingClientRect()
+      : null;
+    const centerYFromEvent = Number.isFinite(event.clientY) ? event.clientY : null;
+    const centerXFromEvent = Number.isFinite(event.clientX) ? event.clientX : null;
+    const top = rect ? rect.top : (centerYFromEvent ?? 0);
+    const bottom = rect ? rect.bottom : (centerYFromEvent ?? 0);
+    const centerY = centerYFromEvent ?? ((top + bottom) / 2);
+    const centerX = centerXFromEvent ?? (rect ? ((rect.left + rect.right) / 2) : null);
+
+    setHistoryAnchor({
+      top,
+      bottom,
+      centerY,
+      centerX,
+    });
   };
 
   useEffect(() => {
