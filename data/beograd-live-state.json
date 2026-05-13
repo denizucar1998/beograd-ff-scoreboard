@@ -81,12 +81,6 @@
           "dnf": false,
           "time": 55,
           "ts": 1778666365194
-        },
-        {
-          "id": "t-1778666368728-73xlqrje",
-          "dnf": true,
-          "time": null,
-          "ts": 1778666368728
         }
       ],
       "p3": [
@@ -105,8 +99,8 @@
       ]
     }
   },
-  "revision": 13,
-  "version": 13,
-  "updatedAt": "2026-05-13T10:00:46.694Z",
-  "updatedBy": "client-1778618754111-a2swnb"
+  "revision": 14,
+  "version": 14,
+  "updatedAt": "2026-05-13T10:00:59.260Z",
+  "updatedBy": "client-1778618721697-ijrw2m"
 }
