@@ -67,16 +67,16 @@
           "ts": 1778667181787
         },
         {
-          "id": "t-1778667646975-v5irgvhm",
+          "id": "t-1778673709509-ck4nbfyz",
           "dnf": true,
           "time": null,
-          "ts": 1778667646975
+          "ts": 1778673709509
         },
         {
-          "id": "t-1778673134926-iotqdai9",
-          "dnf": false,
-          "time": 164,
-          "ts": 1778673134926
+          "id": "t-1778673717548-psafn5zw",
+          "dnf": true,
+          "time": null,
+          "ts": 1778673717548
         }
       ],
       "p5": [
@@ -105,8 +105,8 @@
       ]
     }
   },
-  "revision": 40,
-  "version": 40,
-  "updatedAt": "2026-05-13T12:03:13.133Z",
+  "revision": 41,
+  "version": 41,
+  "updatedAt": "2026-05-13T12:03:14.115Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
