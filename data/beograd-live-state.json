@@ -39,18 +39,11 @@
       }
     ],
     "entries": {
-      "p2": [
-        {
-          "id": "t-1778666127756-gsloga2k",
-          "dnf": false,
-          "time": 24.44,
-          "ts": 1778666127756
-        }
-      ]
+      "p2": []
     }
   },
-  "revision": 1,
-  "version": 1,
-  "updatedAt": "2026-05-13T09:55:27.855Z",
+  "revision": 2,
+  "version": 2,
+  "updatedAt": "2026-05-13T09:55:29.086Z",
   "updatedBy": "codex-check"
 }
