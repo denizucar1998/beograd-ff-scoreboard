@@ -83,6 +83,12 @@
           "dnf": false,
           "time": 400,
           "ts": 1778667203611
+        },
+        {
+          "id": "t-1778667646975-v5irgvhm",
+          "dnf": true,
+          "time": null,
+          "ts": 1778667646975
         }
       ],
       "p5": [
@@ -117,8 +123,8 @@
       ]
     }
   },
-  "revision": 19,
-  "version": 19,
-  "updatedAt": "2026-05-13T10:13:23.751Z",
+  "revision": 20,
+  "version": 20,
+  "updatedAt": "2026-05-13T10:20:47.059Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
