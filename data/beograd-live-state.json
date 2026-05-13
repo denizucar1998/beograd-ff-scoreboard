@@ -55,12 +55,6 @@
           "ts": 1778666323803
         },
         {
-          "id": "t-1778667178008-50mp0z1h",
-          "dnf": true,
-          "time": null,
-          "ts": 1778667178008
-        },
-        {
           "id": "t-1778667181787-p9q7zxpc",
           "dnf": false,
           "time": 11,
@@ -99,8 +93,8 @@
       ]
     }
   },
-  "revision": 42,
-  "version": 42,
-  "updatedAt": "2026-05-13T12:03:19.025Z",
+  "revision": 43,
+  "version": 43,
+  "updatedAt": "2026-05-13T12:03:21.051Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
