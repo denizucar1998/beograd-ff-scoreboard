@@ -495,6 +495,19 @@
     color:var(--paper);
     display:flex;align-items:center;gap:10px;
   }
+  .logbar-current{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(239,230,211,.78);
+    white-space:nowrap;
+  }
+  .logbar-current b{
+    color:var(--paper);
+    font-weight:700;
+    letter-spacing:.08em;
+  }
   .logbar .label .pulse{
     width:10px;height:10px;background:var(--red);border-radius:50%;
     animation:pulse 1.4s ease-in-out infinite;
@@ -515,9 +528,14 @@
   }
   .logbar select{font-family:'Anton',sans-serif;font-size:20px;font-weight:400;letter-spacing:.02em;min-width:170px}
   .logbar select option{background:var(--ink);color:var(--paper)}
-  .logbar input{width:140px;text-align:center}
+  .logbar-time{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .logbar-time input{width:140px;text-align:center}
   .logbar input::placeholder{color:rgba(239,230,211,.4)}
-  .logbar .seclabel{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;color:rgba(239,230,211,.55);text-transform:uppercase;margin-left:-6px}
+  .logbar .seclabel{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;color:rgba(239,230,211,.55);text-transform:uppercase}
   .logbar .btn{
     font-family:'Anton',sans-serif;
     font-size:22px;
@@ -681,12 +699,26 @@
 
     .desktop-board{display:none}
     .mobile-board{display:block}
-    .scoreboard{border-width:2px}
+    .scoreboard{
+      border-width:2px;
+      overflow:visible;
+    }
+    .mobile-board,
+    .mcard,
+    .mcard-actions,
+    .history-wrap{
+      overflow:visible;
+    }
     .addrow{border-top:1px solid var(--line-strong)}
-    .history-pop{
-      right:auto;
-      left:0;
-      width:min(92vw, 320px);
+    .mobile-board .history-pop{
+      right:0;
+      left:auto;
+      width:min(92vw, 340px);
+      max-height:55vh;
+      z-index:80;
+    }
+    .mobile-board .history-list{
+      max-height:44vh;
     }
 
     .logbar{
@@ -695,22 +727,41 @@
       border:2px solid var(--red);
       border-top-width:2px;
       padding:12px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      align-items:center;
       gap:8px;
-      flex-wrap:wrap;
     }
     .logbar .label{
-      width:100%;
+      grid-column:1 / -1;
       font-size:18px;
     }
+    .logbar-current{
+      grid-column:1 / -1;
+      white-space:normal;
+    }
     .logbar select{
+      grid-column:1 / -1;
+      width:100%;
       min-width:0;
-      flex:1;
+      font-size:18px;
+      padding:9px 10px;
+    }
+    .logbar-time{
+      grid-column:1 / -1;
+      min-width:0;
       width:100%;
     }
-    .logbar input{
-      width:96px;
-      flex:0 0 96px;
+    .logbar-time input{
+      width:100%;
+      min-width:0;
     }
+    .logbar .btn{
+      width:100%;
+      font-size:18px;
+      padding:9px 12px;
+    }
+    .logbar .spacer{display:none}
     .logbar .meta{width:100%}
     .toast{bottom:18px}
     .footnote{
@@ -727,6 +778,12 @@
       gap:6px;
     }
     .mstat strong{font-size:18px}
+    .logbar select{font-size:16px}
+    .logbar .btn{
+      font-size:16px;
+      letter-spacing:.04em;
+      padding:8px 10px;
+    }
     .rank{font-size:30px}
     .name{font-size:20px}
     .stat{font-size:18px}
@@ -757,7 +814,7 @@ const { useState, useEffect, useMemo, useRef } = React;
 const STORAGE_KEY = 'beograd-ff-scoreboard-v1';
 const CLIENT_KEY = 'beograd-ff-client-id-v1';
 const LIVE_STATE_ENDPOINT = '/api/state';
-const LIVE_POLL_MS = 3000;
+const LIVE_POLL_MS = 10000;
 
 const DEFAULT_PEOPLE = [
   { id: 'p1', name: 'Dalle' },
@@ -1319,6 +1376,7 @@ function App() {
   };
 
   const leaderId = ranked[0]?.stats?.[sortMode === 'avg' ? 'avg' : 'fastest'] != null ? ranked[0].id : null;
+  const selectedPersonName = people.find((p) => p.id === selectedId)?.name || '—';
   const totalEntries = people.reduce((acc, p) => acc + (entries[p.id]?.length || 0), 0);
   const syncLabel = syncMeta.status === 'live'
     ? `Live v${syncMeta.revision}`
@@ -1427,19 +1485,22 @@ function App() {
       {/* LOG BAR */}
       <div className="logbar">
         <div className="label"><span className="pulse"></span>LOG FF →</div>
+        <div className="logbar-current">Valgt: <b>{selectedPersonName}</b></div>
         <select value={selectedId} onChange={e => setSelectedId(e.target.value)}>
           {people.length === 0 && <option value="">— ingen boys —</option>}
           {people.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={timeInput}
-          placeholder="0.00"
-          onChange={e => setTimeInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') logTime(); }}
-        />
-        <span className="seclabel">sek</span>
+        <div className="logbar-time">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={timeInput}
+            placeholder="0.00"
+            onChange={e => setTimeInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') logTime(); }}
+          />
+          <span className="seclabel">sek</span>
+        </div>
         <button className="btn" onClick={logTime}>LOG TID</button>
         <button className="btn dnf" onClick={logDNF}>DNF</button>
         <div className="spacer"></div>
