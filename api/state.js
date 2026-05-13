@@ -1,6 +1,5 @@
-const { list, put } = require('@vercel/blob');
-
-const EVENTS_PREFIX = 'events/';
+const fs = require('node:fs/promises');
+const path = require('node:path');
 
 const DEFAULT_PEOPLE = [
   { id: 'p1', name: 'Dalle' },
@@ -14,9 +13,14 @@ const DEFAULT_PEOPLE = [
   { id: 'p9', name: 'Jonas P' },
 ];
 
+const DEFAULT_GITHUB_STATE_PATH = 'data/beograd-live-state.json';
+const DEFAULT_LOCAL_STATE_PATH = process.env.VERCEL
+  ? '/tmp/beograd-live-state.json'
+  : path.join(process.cwd(), 'data', 'beograd-live-state.json');
+
 function makeDefaultState() {
   return {
-    people: DEFAULT_PEOPLE.map((p) => ({ ...p })),
+    people: DEFAULT_PEOPLE.map((person) => ({ ...person })),
     entries: {},
   };
 }
@@ -27,8 +31,8 @@ function normalizeState(raw) {
 
   const people = Array.isArray(raw.people)
     ? raw.people
-        .filter((p) => p && typeof p.id === 'string' && typeof p.name === 'string')
-        .map((p) => ({ id: p.id, name: p.name.trim() || p.name }))
+        .filter((person) => person && typeof person.id === 'string' && typeof person.name === 'string')
+        .map((person) => ({ id: person.id, name: person.name.trim() || person.name }))
     : fallback.people;
 
   const entries = {};
@@ -49,11 +53,10 @@ function normalizeState(raw) {
       });
   }
 
-  return { people: people.length ? people : fallback.people, entries };
-}
-
-function cloneState(raw) {
-  return normalizeState(JSON.parse(JSON.stringify(raw || makeDefaultState())));
+  return {
+    people: people.length ? people : fallback.people,
+    entries,
+  };
 }
 
 function sanitizeUpdatedBy(value) {
@@ -67,12 +70,50 @@ function makeId(prefix) {
 }
 
 function hasPerson(state, personId) {
-  return state.people.some((p) => p.id === personId);
+  return state.people.some((person) => person.id === personId);
 }
 
 function hasEntry(state, personId, entryId) {
   const list = state.entries[personId] || [];
   return list.some((entry) => entry.id === entryId);
+}
+
+function normalizeEnvelope(raw) {
+  const base = {
+    state: makeDefaultState(),
+    revision: 0,
+    version: 0,
+    updatedAt: null,
+    updatedBy: null,
+  };
+
+  if (!raw || typeof raw !== 'object') {
+    return base;
+  }
+
+  const payloadState = raw.state && typeof raw.state === 'object'
+    ? raw.state
+    : raw;
+  base.state = normalizeState(payloadState);
+
+  const revisionCandidate = Number(raw.revision ?? raw.version ?? 0);
+  if (Number.isFinite(revisionCandidate) && revisionCandidate >= 0) {
+    base.revision = revisionCandidate;
+    base.version = revisionCandidate;
+  }
+
+  if (typeof raw.updatedAt === 'string' && raw.updatedAt.trim()) {
+    base.updatedAt = raw.updatedAt;
+  }
+  if (typeof raw.updatedBy === 'string' && raw.updatedBy.trim()) {
+    base.updatedBy = raw.updatedBy.slice(0, 64);
+  }
+
+  return base;
+}
+
+function cloneState(state) {
+  return normalizeState(JSON.parse(JSON.stringify(state || makeDefaultState())));
 }
 
 function normalizeAction(actionName, rawPayload, currentState) {
@@ -151,10 +192,9 @@ function normalizeAction(actionName, rawPayload, currentState) {
   throw new Error('Ukendt action');
 }
 
-function applyEventToState(rawState, event) {
+function applyActionToState(rawState, normalizedAction) {
   const state = cloneState(rawState);
-  const payload = event && event.payload && typeof event.payload === 'object' ? event.payload : {};
-  const action = String(event?.action || '').trim().toLowerCase();
+  const { action, payload } = normalizedAction;
 
   if (action === 'replace_state') {
     return normalizeState(payload.state || {});
@@ -164,7 +204,7 @@ function applyEventToState(rawState, event) {
     const personId = String(payload.personId || '').trim();
     const name = String(payload.name || '').trim();
     if (!personId || !name) return state;
-    if (state.people.some((p) => p.id === personId)) return state;
+    if (state.people.some((person) => person.id === personId)) return state;
     state.people.push({ id: personId, name });
     return state;
   }
@@ -172,7 +212,7 @@ function applyEventToState(rawState, event) {
   if (action === 'remove_person') {
     const personId = String(payload.personId || '').trim();
     if (!personId) return state;
-    state.people = state.people.filter((p) => p.id !== personId);
+    state.people = state.people.filter((person) => person.id !== personId);
     delete state.entries[personId];
     return state;
   }
@@ -211,66 +251,192 @@ function applyEventToState(rawState, event) {
   return state;
 }
 
-async function listAllEventBlobs() {
-  const blobs = [];
-  let cursor = null;
-  for (let i = 0; i < 50; i += 1) {
-    const params = { prefix: EVENTS_PREFIX, limit: 1000 };
-    if (cursor) params.cursor = cursor;
-    const page = await list(params);
-    blobs.push(...(page.blobs || []));
-    const nextCursor = page.cursor || page.nextCursor || page.continuationToken || null;
-    const hasMore = Boolean(page.hasMore || page.hasNextPage || nextCursor);
-    if (!hasMore || !nextCursor || nextCursor === cursor) break;
-    cursor = nextCursor;
+function envFirst(...keys) {
+  for (const key of keys) {
+    const value = String(process.env[key] || '').trim();
+    if (value) return value;
   }
-  return blobs;
+  return '';
 }
 
-async function readEventBlob(blob) {
-  const separator = blob.url.includes('?') ? '&' : '?';
-  const response = await fetch(`${blob.url}${separator}t=${Date.now()}`, { cache: 'no-store' });
-  if (!response.ok) return null;
-  const event = await response.json().catch(() => null);
-  if (!event || typeof event !== 'object') return null;
-  const action = String(event.action || '').trim().toLowerCase();
-  const ts = Number(event.ts);
-  if (!action || !Number.isFinite(ts)) return null;
+function storageConfig(pathOverride = null) {
+  const repo = envFirst('BEOGRAD_GITHUB_REPO', 'TIPSKLUBBEN_GITHUB_REPO', 'GITHUB_REPOSITORY');
+  const token = envFirst('BEOGRAD_GITHUB_TOKEN', 'TIPSKLUBBEN_GITHUB_TOKEN', 'GITHUB_TOKEN');
+  const branch = envFirst('BEOGRAD_GITHUB_BRANCH', 'TIPSKLUBBEN_GITHUB_BRANCH') || 'main';
+  const configuredPath = String(
+    pathOverride
+    || envFirst('BEOGRAD_STATE_PATH', 'TIPSKLUBBEN_STATE_PATH')
+    || DEFAULT_GITHUB_STATE_PATH
+  ).trim();
+
+  if (repo && token) {
+    return {
+      type: 'github',
+      repo,
+      token,
+      branch,
+      path: configuredPath,
+    };
+  }
+
+  const localConfigured = String(pathOverride || envFirst('BEOGRAD_LOCAL_STATE_PATH') || DEFAULT_LOCAL_STATE_PATH).trim();
+  const resolvedPath = path.isAbsolute(localConfigured)
+    ? localConfigured
+    : path.join(process.cwd(), localConfigured);
+
   return {
-    id: String(event.id || blob.pathname),
-    ts,
-    at: typeof event.at === 'string' ? event.at : new Date(ts).toISOString(),
-    by: sanitizeUpdatedBy(event.by),
-    action,
-    payload: event.payload && typeof event.payload === 'object' ? event.payload : {},
+    type: 'local',
+    path: resolvedPath,
   };
 }
 
-async function loadEventRecords() {
-  const blobs = await listAllEventBlobs();
-  if (!blobs.length) return [];
-
-  const events = await Promise.all(blobs.map((blob) => readEventBlob(blob)));
-  const clean = events.filter(Boolean);
-  clean.sort((a, b) => (a.ts - b.ts) || String(a.id).localeCompare(String(b.id)));
-  return clean;
+function encodeGithubPath(filePath) {
+  return filePath.split('/').map((part) => encodeURIComponent(part)).join('/');
 }
 
-async function buildEnvelopeFromEvents() {
-  const events = await loadEventRecords();
-  let state = makeDefaultState();
-  for (const event of events) {
-    state = applyEventToState(state, event);
+async function githubFetch(config, method, body = null) {
+  const url = `https://api.github.com/repos/${config.repo}/contents/${encodeGithubPath(config.path)}`;
+  const fullUrl = method === 'GET'
+    ? `${url}?ref=${encodeURIComponent(config.branch)}`
+    : url;
+
+  const response = await fetch(fullUrl, {
+    method,
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${config.token}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(payload?.message || `GitHub API fejl (${response.status})`);
+    error.status = response.status;
+    error.payload = payload;
+    throw error;
   }
-  const latest = events.length ? events[events.length - 1] : null;
-  const revision = events.length;
+
+  return payload;
+}
+
+async function loadFromGithub(config) {
+  try {
+    const payload = await githubFetch(config, 'GET');
+    const encoded = String(payload?.content || '');
+    if (!encoded) return null;
+    const decoded = Buffer.from(encoded.replace(/\n/g, ''), 'base64').toString('utf8');
+    const parsed = JSON.parse(decoded);
+    const env = normalizeEnvelope(parsed);
+    env._sha = String(payload?.sha || payload?.content?.sha || '').trim() || null;
+    env.storage = 'github';
+    return env;
+  } catch (error) {
+    if (error.status === 404) return null;
+    throw error;
+  }
+}
+
+async function saveToGithub(config, envelope, sha = null, commitMessage = null) {
+  const body = {
+    message: commitMessage || `chore(data): update beograd live state (${envelope.updatedBy || 'web'})`,
+    content: Buffer.from(JSON.stringify(envelope, null, 2), 'utf8').toString('base64'),
+    branch: config.branch,
+  };
+  if (sha) body.sha = sha;
+
+  const payload = await githubFetch(config, 'PUT', body);
+  const out = normalizeEnvelope(envelope);
+  out._sha = String(payload?.content?.sha || '').trim() || sha || null;
+  out.storage = 'github';
+  return out;
+}
+
+async function loadFromLocal(localPath) {
+  try {
+    const raw = await fs.readFile(localPath, 'utf8');
+    const parsed = JSON.parse(raw);
+    const env = normalizeEnvelope(parsed);
+    env.storage = 'local';
+    return env;
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
+async function saveToLocal(localPath, envelope) {
+  await fs.mkdir(path.dirname(localPath), { recursive: true });
+  await fs.writeFile(localPath, `${JSON.stringify(envelope, null, 2)}\n`, 'utf8');
+  const out = normalizeEnvelope(envelope);
+  out.storage = 'local';
+  return out;
+}
+
+async function loadStateEnvelope(config = storageConfig()) {
+  let loaded = null;
+
+  if (config.type === 'github') {
+    loaded = await loadFromGithub(config);
+  } else {
+    loaded = await loadFromLocal(config.path);
+  }
+
+  if (!loaded) {
+    return {
+      state: makeDefaultState(),
+      revision: 0,
+      version: 0,
+      updatedAt: null,
+      updatedBy: null,
+      storage: config.type,
+      _sha: null,
+    };
+  }
+
   return {
-    state: normalizeState(state),
-    revision,
-    version: revision,
-    updatedAt: latest?.at || null,
-    updatedBy: latest?.by || null,
-    storage: 'blob-events',
+    ...normalizeEnvelope(loaded),
+    storage: loaded.storage || config.type,
+    _sha: loaded._sha || null,
+  };
+}
+
+async function saveStateEnvelope(nextState, updatedBy = 'web', commitMessage = null, attempt = 0) {
+  const config = storageConfig();
+  const current = await loadStateEnvelope(config);
+  const nextRevision = (Number(current.revision || current.version || 0) || 0) + 1;
+
+  const envelope = {
+    state: normalizeState(nextState),
+    revision: nextRevision,
+    version: nextRevision,
+    updatedAt: new Date().toISOString(),
+    updatedBy: sanitizeUpdatedBy(updatedBy),
+  };
+
+  try {
+    if (config.type === 'github') {
+      return await saveToGithub(config, envelope, current._sha || null, commitMessage);
+    }
+    return await saveToLocal(config.path, envelope);
+  } catch (error) {
+    if (config.type === 'github' && (error.status === 409 || error.status === 422) && attempt < 2) {
+      return saveStateEnvelope(nextState, updatedBy, commitMessage, attempt + 1);
+    }
+    throw error;
+  }
+}
+
+function toPublicEnvelope(envelope) {
+  return {
+    state: normalizeState(envelope?.state),
+    revision: Number(envelope?.revision || envelope?.version || 0) || 0,
+    version: Number(envelope?.revision || envelope?.version || 0) || 0,
+    updatedAt: envelope?.updatedAt || null,
+    updatedBy: envelope?.updatedBy || null,
+    storage: envelope?.storage || 'unknown',
   };
 }
 
@@ -294,28 +460,13 @@ async function parseJsonBody(req) {
   });
 }
 
-async function writeEvent(record) {
-  const path = `${EVENTS_PREFIX}${record.ts}-${record.id}.json`;
-  await put(path, JSON.stringify(record), {
-    access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: false,
-    contentType: 'application/json; charset=utf-8',
-    cacheControlMaxAge: 60,
-  });
-}
-
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return res.status(500).json({ error: 'Missing BLOB_READ_WRITE_TOKEN' });
-  }
-
   if (req.method === 'GET') {
     try {
-      const envelope = await buildEnvelopeFromEvents();
-      return res.status(200).json(envelope);
+      const envelope = await loadStateEnvelope();
+      return res.status(200).json(toPublicEnvelope(envelope));
     } catch (error) {
       return res.status(500).json({ error: 'Failed to fetch live state', detail: error.message });
     }
@@ -324,30 +475,13 @@ module.exports = async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const body = await parseJsonBody(req);
-      const current = await buildEnvelopeFromEvents();
+      const current = await loadStateEnvelope();
       const normalizedAction = normalizeAction(body?.action, body?.payload, current.state);
+      const nextState = applyActionToState(current.state, normalizedAction);
       const updatedBy = sanitizeUpdatedBy(body?.updatedBy);
-
-      const record = {
-        id: makeId('ev'),
-        ts: Date.now(),
-        at: new Date().toISOString(),
-        by: updatedBy,
-        action: normalizedAction.action,
-        payload: normalizedAction.payload,
-      };
-
-      await writeEvent(record);
-      const nextState = applyEventToState(current.state, record);
-      const nextRevision = (current.revision || 0) + 1;
-      return res.status(200).json({
-        state: normalizeState(nextState),
-        revision: nextRevision,
-        version: nextRevision,
-        updatedAt: record.at,
-        updatedBy,
-        storage: 'blob-events',
-      });
+      const commitMessage = `chore(data): ${normalizedAction.action}`;
+      const saved = await saveStateEnvelope(nextState, updatedBy, commitMessage);
+      return res.status(200).json(toPublicEnvelope(saved));
     } catch (error) {
       const badRequest = /mangler|Ugyldig|Ukendt|findes ikke|kræver/.test(String(error?.message || ''));
       return res.status(badRequest ? 400 : 500).json({

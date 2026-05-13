@@ -2,8 +2,5 @@
   "name": "beograd-ff-scoreboard",
   "private": true,
   "version": "1.0.0",
-  "description": "Beograd FF live leaderboard",
-  "dependencies": {
-    "@vercel/blob": "^1.1.1"
-  }
+  "description": "Beograd FF live leaderboard"
 }
