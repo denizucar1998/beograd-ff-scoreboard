@@ -47,14 +47,7 @@
           "ts": 1778666356510
         }
       ],
-      "p1": [
-        {
-          "id": "t-1778673717548-psafn5zw",
-          "dnf": true,
-          "time": null,
-          "ts": 1778673717548
-        }
-      ],
+      "p1": [],
       "p5": [
         {
           "id": "t-1778666348899-1ldozl4j",
@@ -81,8 +74,8 @@
       ]
     }
   },
-  "revision": 45,
-  "version": 45,
-  "updatedAt": "2026-05-13T12:03:25.426Z",
+  "revision": 46,
+  "version": 46,
+  "updatedAt": "2026-05-13T12:03:27.672Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
