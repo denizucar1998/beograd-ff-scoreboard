@@ -50,18 +50,12 @@
           "dnf": false,
           "time": 1,
           "ts": 1778673735578
-        },
-        {
-          "id": "t-1778673737609-6s2665vq",
-          "dnf": true,
-          "time": null,
-          "ts": 1778673737609
         }
       ]
     }
   },
-  "revision": 48,
-  "version": 48,
-  "updatedAt": "2026-05-13T12:03:36.092Z",
+  "revision": 49,
+  "version": 49,
+  "updatedAt": "2026-05-13T12:03:38.548Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
