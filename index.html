@@ -711,14 +711,18 @@
     }
     .addrow{border-top:1px solid var(--line-strong)}
     .mobile-board .history-pop{
-      right:0;
-      left:auto;
-      width:min(92vw, 340px);
-      max-height:55vh;
-      z-index:80;
+      position:fixed;
+      left:50%;
+      right:auto;
+      top:max(12px, calc(env(safe-area-inset-top) + 8px));
+      transform:translateX(-50%);
+      width:min(94vw, 360px);
+      max-height:74vh;
+      z-index:120;
+      box-shadow:0 10px 26px rgba(0,0,0,.42);
     }
     .mobile-board .history-list{
-      max-height:44vh;
+      max-height:62vh;
     }
 
     .logbar{
