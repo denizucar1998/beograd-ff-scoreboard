@@ -1026,16 +1026,8 @@ function HistoryPopover({ person, onClose, onDelete, mobileAnchor = null }) {
       const margin = 8;
       const popRect = ref.current.getBoundingClientRect();
       const popHeight = popRect.height || 320;
-      const spaceAbove = mobileAnchor.top - margin;
-      const spaceBelow = viewportHeight - mobileAnchor.bottom - margin;
-
-      let nextTop;
-      if (spaceAbove >= popHeight || spaceAbove > spaceBelow) {
-        nextTop = mobileAnchor.top - popHeight - 6;
-      } else {
-        nextTop = mobileAnchor.bottom + 6;
-      }
-
+      const anchorCenterY = (mobileAnchor.top + mobileAnchor.bottom) / 2;
+      let nextTop = anchorCenterY - (popHeight / 2);
       nextTop = Math.max(margin, Math.min(nextTop, viewportHeight - popHeight - margin));
       setMobileStyle({ top: `${Math.round(nextTop)}px` });
     };
