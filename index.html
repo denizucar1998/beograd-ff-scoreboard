@@ -718,7 +718,7 @@
       bottom:auto;
       transform:translateX(-50%);
       width:min(92vw, 340px);
-      max-height:min(56vh, 420px);
+      max-height:380px;
       overflow:hidden;
       display:flex;
       flex-direction:column;
@@ -1234,15 +1234,42 @@ function App() {
       return;
     }
 
-    const rect = event.currentTarget?.getBoundingClientRect
-      ? event.currentTarget.getBoundingClientRect()
-      : null;
-    const centerYFromEvent = Number.isFinite(event.clientY) ? event.clientY : null;
-    const centerXFromEvent = Number.isFinite(event.clientX) ? event.clientX : null;
-    const top = rect ? rect.top : (centerYFromEvent ?? 0);
-    const bottom = rect ? rect.bottom : (centerYFromEvent ?? 0);
-    const centerY = centerYFromEvent ?? ((top + bottom) / 2);
-    const centerX = centerXFromEvent ?? (rect ? ((rect.left + rect.right) / 2) : null);
+    const el = event.currentTarget || null;
+    let top = 0;
+    let bottom = 0;
+    let centerY = 0;
+    let centerX = 0;
+
+    if (el) {
+      let docLeft = 0;
+      let docTop = 0;
+      let node = el;
+      while (node) {
+        docLeft += node.offsetLeft || 0;
+        docTop += node.offsetTop || 0;
+        node = node.offsetParent;
+      }
+
+      const scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+      const width = el.offsetWidth || 0;
+      const height = el.offsetHeight || 0;
+
+      top = docTop - scrollY;
+      bottom = top + height;
+      centerY = top + (height / 2);
+      centerX = (docLeft - scrollX) + (width / 2);
+    } else {
+      const rect = event.currentTarget?.getBoundingClientRect
+        ? event.currentTarget.getBoundingClientRect()
+        : null;
+      const centerYFromEvent = Number.isFinite(event.clientY) ? event.clientY : null;
+      const centerXFromEvent = Number.isFinite(event.clientX) ? event.clientX : null;
+      top = rect ? rect.top : (centerYFromEvent ?? 0);
+      bottom = rect ? rect.bottom : (centerYFromEvent ?? 0);
+      centerY = centerYFromEvent ?? ((top + bottom) / 2);
+      centerX = centerXFromEvent ?? (rect ? ((rect.left + rect.right) / 2) : 0);
+    }
 
     setHistoryAnchor({
       top,
