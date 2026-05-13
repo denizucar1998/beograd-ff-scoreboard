@@ -39,14 +39,7 @@
       }
     ],
     "entries": {
-      "p2": [
-        {
-          "id": "t-1778666356510-o7do7huk",
-          "dnf": false,
-          "time": 2.45,
-          "ts": 1778666356510
-        }
-      ],
+      "p2": [],
       "p1": [],
       "p5": [
         {
@@ -74,8 +67,8 @@
       ]
     }
   },
-  "revision": 46,
-  "version": 46,
-  "updatedAt": "2026-05-13T12:03:27.672Z",
+  "revision": 47,
+  "version": 47,
+  "updatedAt": "2026-05-13T12:03:32.259Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
