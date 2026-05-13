@@ -710,14 +710,14 @@
       overflow:visible;
     }
     .addrow{border-top:1px solid var(--line-strong)}
-    .mobile-board .history-pop{
-      position:fixed;
-      left:50%;
-      right:auto;
-      top:12px;
+    .history-pop-mobile{
+      position:absolute;
+      right:0;
+      left:auto;
+      top:calc(100% + 8px);
       bottom:auto;
-      transform:translateX(-50%);
-      width:min(92vw, 340px);
+      transform:none;
+      width:min(88vw, 340px);
       max-height:380px;
       overflow:hidden;
       display:flex;
@@ -725,11 +725,11 @@
       z-index:120;
       box-shadow:0 10px 26px rgba(0,0,0,.42);
     }
-    .mobile-board .history-pop h4{
+    .history-pop-mobile h4{
       margin:0;
       flex-shrink:0;
     }
-    .mobile-board .history-list{
+    .history-pop-mobile .history-list{
       max-height:none;
       flex:1;
       min-height:0;
@@ -822,7 +822,7 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useMemo, useRef, useLayoutEffect } = React;
+const { useState, useEffect, useMemo, useRef } = React;
 
 // ---------- STORAGE ----------
 const STORAGE_KEY = 'beograd-ff-scoreboard-v1';
@@ -1012,60 +1012,28 @@ function Podium({ ranked, sortMode }) {
   );
 }
 
-function HistoryPopover({ person, onClose, onDelete, mobileAnchor = null }) {
+function HistoryPopover({ person, onClose, onDelete, mobile = false }) {
   const ref = useRef(null);
-  const [mobileStyle, setMobileStyle] = useState(null);
   useEffect(() => {
     const onDoc = (e) => {
       if (ref.current && !ref.current.contains(e.target)) onClose();
     };
-    setTimeout(() => document.addEventListener('mousedown', onDoc), 0);
-    return () => document.removeEventListener('mousedown', onDoc);
+    setTimeout(() => {
+      document.addEventListener('mousedown', onDoc);
+      document.addEventListener('touchstart', onDoc, { passive: true });
+    }, 0);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('touchstart', onDoc);
+    };
   }, [onClose]);
 
   const entries = [...(person.entries || [])].sort((a, b) => b.ts - a.ts);
-  useLayoutEffect(() => {
-    if (!mobileAnchor || !ref.current) {
-      setMobileStyle(null);
-      return;
-    }
-
-    const place = () => {
-      const viewport = window.visualViewport;
-      const viewportHeight = (viewport && Number.isFinite(viewport.height)) ? viewport.height : (window.innerHeight || document.documentElement.clientHeight || 0);
-      const viewportWidth = (viewport && Number.isFinite(viewport.width)) ? viewport.width : (window.innerWidth || document.documentElement.clientWidth || 0);
-      const margin = 8;
-      const popRect = ref.current.getBoundingClientRect();
-      const popHeight = popRect.height || 320;
-      const popWidth = popRect.width || 320;
-      const anchorCenterY = Number.isFinite(mobileAnchor.centerY)
-        ? mobileAnchor.centerY
-        : ((mobileAnchor.top + mobileAnchor.bottom) / 2);
-      const anchorCenterX = Number.isFinite(mobileAnchor.centerX)
-        ? mobileAnchor.centerX
-        : (viewportWidth / 2);
-
-      let nextTop = anchorCenterY - (popHeight / 2);
-      let nextLeft = anchorCenterX - (popWidth / 2);
-      nextTop = Math.max(margin, Math.min(nextTop, viewportHeight - popHeight - margin));
-      nextLeft = Math.max(margin, Math.min(nextLeft, viewportWidth - popWidth - margin));
-      setMobileStyle({
-        top: `${Math.round(nextTop)}px`,
-        left: `${Math.round(nextLeft)}px`,
-        transform: 'none',
-      });
-    };
-
-    place();
-    window.addEventListener('resize', place);
-    return () => window.removeEventListener('resize', place);
-  }, [mobileAnchor, entries.length]);
 
   return (
     <div
-      className="history-pop"
+      className={`history-pop ${mobile ? 'history-pop-mobile' : ''}`}
       ref={ref}
-      style={mobileStyle || undefined}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
@@ -1134,7 +1102,7 @@ function Row({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistor
   );
 }
 
-function MobileCard({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistory, onDeleteEntry, onRemovePerson, historyAnchor }) {
+function MobileCard({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistory, onDeleteEntry, onRemovePerson }) {
   const s = person.stats;
   return (
     <div className={`mcard ${isLeader ? 'leader' : ''}`}>
@@ -1167,13 +1135,13 @@ function MobileCard({ person, rank, isLeader, onOpenHistory, openHistory, onClos
 
       <div className="mcard-actions">
         <div className="history-wrap">
-          <button className="iconbtn" onClick={(event) => onOpenHistory(person.id, event)}>Log</button>
+          <button className="iconbtn" onClick={() => onOpenHistory(person.id)}>Log</button>
           {openHistory === person.id && (
             <HistoryPopover
               person={person}
               onClose={onCloseHistory}
               onDelete={(eid) => onDeleteEntry(person.id, eid)}
-              mobileAnchor={historyAnchor}
+              mobile
             />
           )}
         </div>
@@ -1192,7 +1160,6 @@ function App() {
   const [selectedId, setSelectedId] = useState('');
   const [timeInput, setTimeInput] = useState('');
   const [openHistory, setOpenHistory] = useState(null);
-  const [historyAnchor, setHistoryAnchor] = useState(null);
   const [toast, setToast] = useState(null);
   const [sortMode, setSortMode] = useState('fastest'); // 'fastest' | 'avg'
   const [syncMeta, setSyncMeta] = useState({
@@ -1221,62 +1188,12 @@ function App() {
     setTimeout(() => setToast(null), 1900);
   };
 
-  const toggleHistory = (id, event = null) => {
+  const toggleHistory = (id) => {
     if (openHistory === id) {
       setOpenHistory(null);
-      setHistoryAnchor(null);
       return;
     }
-
     setOpenHistory(id);
-    if (!event) {
-      setHistoryAnchor(null);
-      return;
-    }
-
-    const el = event.currentTarget || null;
-    let top = 0;
-    let bottom = 0;
-    let centerY = 0;
-    let centerX = 0;
-
-    if (el) {
-      let docLeft = 0;
-      let docTop = 0;
-      let node = el;
-      while (node) {
-        docLeft += node.offsetLeft || 0;
-        docTop += node.offsetTop || 0;
-        node = node.offsetParent;
-      }
-
-      const scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
-      const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
-      const width = el.offsetWidth || 0;
-      const height = el.offsetHeight || 0;
-
-      top = docTop - scrollY;
-      bottom = top + height;
-      centerY = top + (height / 2);
-      centerX = (docLeft - scrollX) + (width / 2);
-    } else {
-      const rect = event.currentTarget?.getBoundingClientRect
-        ? event.currentTarget.getBoundingClientRect()
-        : null;
-      const centerYFromEvent = Number.isFinite(event.clientY) ? event.clientY : null;
-      const centerXFromEvent = Number.isFinite(event.clientX) ? event.clientX : null;
-      top = rect ? rect.top : (centerYFromEvent ?? 0);
-      bottom = rect ? rect.bottom : (centerYFromEvent ?? 0);
-      centerY = centerYFromEvent ?? ((top + bottom) / 2);
-      centerX = centerXFromEvent ?? (rect ? ((rect.left + rect.right) / 2) : 0);
-    }
-
-    setHistoryAnchor({
-      top,
-      bottom,
-      centerY,
-      centerX,
-    });
   };
 
   useEffect(() => {
@@ -1553,10 +1470,7 @@ function App() {
               isLeader={p.id === leaderId}
               onOpenHistory={toggleHistory}
               openHistory={openHistory}
-              onCloseHistory={() => {
-                setOpenHistory(null);
-                setHistoryAnchor(null);
-              }}
+              onCloseHistory={() => setOpenHistory(null)}
               onDeleteEntry={deleteEntry}
               onRemovePerson={removePerson}
             />
@@ -1575,13 +1489,9 @@ function App() {
               isLeader={p.id === leaderId}
               onOpenHistory={toggleHistory}
               openHistory={openHistory}
-              onCloseHistory={() => {
-                setOpenHistory(null);
-                setHistoryAnchor(null);
-              }}
+              onCloseHistory={() => setOpenHistory(null)}
               onDeleteEntry={deleteEntry}
               onRemovePerson={removePerson}
-              historyAnchor={historyAnchor}
             />
           ))}
         </div>
