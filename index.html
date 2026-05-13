@@ -711,12 +711,12 @@
     }
     .addrow{border-top:1px solid var(--line-strong)}
     .mobile-board .history-pop{
-      position:absolute;
-      left:auto;
-      right:0;
-      top:auto;
-      bottom:calc(100% + 8px);
-      transform:none;
+      position:fixed;
+      left:50%;
+      right:auto;
+      top:12px;
+      bottom:auto;
+      transform:translateX(-50%);
       width:min(92vw, 340px);
       max-height:62vh;
       z-index:120;
@@ -813,7 +813,7 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useMemo, useRef } = React;
+const { useState, useEffect, useMemo, useRef, useLayoutEffect } = React;
 
 // ---------- STORAGE ----------
 const STORAGE_KEY = 'beograd-ff-scoreboard-v1';
@@ -1003,8 +1003,9 @@ function Podium({ ranked, sortMode }) {
   );
 }
 
-function HistoryPopover({ person, onClose, onDelete }) {
+function HistoryPopover({ person, onClose, onDelete, mobileAnchor = null }) {
   const ref = useRef(null);
+  const [mobileStyle, setMobileStyle] = useState(null);
   useEffect(() => {
     const onDoc = (e) => {
       if (ref.current && !ref.current.contains(e.target)) onClose();
@@ -1014,11 +1015,41 @@ function HistoryPopover({ person, onClose, onDelete }) {
   }, [onClose]);
 
   const entries = [...(person.entries || [])].sort((a, b) => b.ts - a.ts);
+  useLayoutEffect(() => {
+    if (!mobileAnchor || !ref.current) {
+      setMobileStyle(null);
+      return;
+    }
+
+    const place = () => {
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const margin = 8;
+      const popRect = ref.current.getBoundingClientRect();
+      const popHeight = popRect.height || 320;
+      const spaceAbove = mobileAnchor.top - margin;
+      const spaceBelow = viewportHeight - mobileAnchor.bottom - margin;
+
+      let nextTop;
+      if (spaceAbove >= popHeight || spaceAbove > spaceBelow) {
+        nextTop = mobileAnchor.top - popHeight - 6;
+      } else {
+        nextTop = mobileAnchor.bottom + 6;
+      }
+
+      nextTop = Math.max(margin, Math.min(nextTop, viewportHeight - popHeight - margin));
+      setMobileStyle({ top: `${Math.round(nextTop)}px` });
+    };
+
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [mobileAnchor, entries.length]);
 
   return (
     <div
       className="history-pop"
       ref={ref}
+      style={mobileStyle || undefined}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
@@ -1087,7 +1118,7 @@ function Row({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistor
   );
 }
 
-function MobileCard({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistory, onDeleteEntry, onRemovePerson }) {
+function MobileCard({ person, rank, isLeader, onOpenHistory, openHistory, onCloseHistory, onDeleteEntry, onRemovePerson, historyAnchor }) {
   const s = person.stats;
   return (
     <div className={`mcard ${isLeader ? 'leader' : ''}`}>
@@ -1120,9 +1151,14 @@ function MobileCard({ person, rank, isLeader, onOpenHistory, openHistory, onClos
 
       <div className="mcard-actions">
         <div className="history-wrap">
-          <button className="iconbtn" onClick={() => onOpenHistory(person.id)}>Log</button>
+          <button className="iconbtn" onClick={(event) => onOpenHistory(person.id, event)}>Log</button>
           {openHistory === person.id && (
-            <HistoryPopover person={person} onClose={onCloseHistory} onDelete={(eid) => onDeleteEntry(person.id, eid)} />
+            <HistoryPopover
+              person={person}
+              onClose={onCloseHistory}
+              onDelete={(eid) => onDeleteEntry(person.id, eid)}
+              mobileAnchor={historyAnchor}
+            />
           )}
         </div>
         <button className="iconbtn danger" onClick={() => {
@@ -1140,6 +1176,7 @@ function App() {
   const [selectedId, setSelectedId] = useState('');
   const [timeInput, setTimeInput] = useState('');
   const [openHistory, setOpenHistory] = useState(null);
+  const [historyAnchor, setHistoryAnchor] = useState(null);
   const [toast, setToast] = useState(null);
   const [sortMode, setSortMode] = useState('fastest'); // 'fastest' | 'avg'
   const [syncMeta, setSyncMeta] = useState({
@@ -1166,6 +1203,26 @@ function App() {
   const showToast = (msg, kind) => {
     setToast({ msg, kind });
     setTimeout(() => setToast(null), 1900);
+  };
+
+  const toggleHistory = (id, event = null) => {
+    if (openHistory === id) {
+      setOpenHistory(null);
+      setHistoryAnchor(null);
+      return;
+    }
+
+    setOpenHistory(id);
+    const isMobile = typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(max-width: 900px)').matches;
+
+    if (isMobile && event?.currentTarget) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setHistoryAnchor({ top: rect.top, bottom: rect.bottom });
+    } else {
+      setHistoryAnchor(null);
+    }
   };
 
   useEffect(() => {
@@ -1440,9 +1497,12 @@ function App() {
               person={p}
               rank={idx + 1}
               isLeader={p.id === leaderId}
-              onOpenHistory={(id) => setOpenHistory(id === openHistory ? null : id)}
+              onOpenHistory={toggleHistory}
               openHistory={openHistory}
-              onCloseHistory={() => setOpenHistory(null)}
+              onCloseHistory={() => {
+                setOpenHistory(null);
+                setHistoryAnchor(null);
+              }}
               onDeleteEntry={deleteEntry}
               onRemovePerson={removePerson}
             />
@@ -1459,11 +1519,15 @@ function App() {
               person={p}
               rank={idx + 1}
               isLeader={p.id === leaderId}
-              onOpenHistory={(id) => setOpenHistory(id === openHistory ? null : id)}
+              onOpenHistory={toggleHistory}
               openHistory={openHistory}
-              onCloseHistory={() => setOpenHistory(null)}
+              onCloseHistory={() => {
+                setOpenHistory(null);
+                setHistoryAnchor(null);
+              }}
               onDeleteEntry={deleteEntry}
               onRemovePerson={removePerson}
+              historyAnchor={historyAnchor}
             />
           ))}
         </div>
