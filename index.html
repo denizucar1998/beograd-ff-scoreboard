@@ -711,19 +711,19 @@
     }
     .addrow{border-top:1px solid var(--line-strong)}
     .mobile-board .history-pop{
-      position:fixed;
-      left:50%;
-      right:auto;
-      top:12px;
-      top:calc(env(safe-area-inset-top, 0px) + 12px);
-      transform:translateX(-50%);
-      width:min(94vw, 360px);
-      max-height:74vh;
+      position:absolute;
+      left:auto;
+      right:0;
+      top:auto;
+      bottom:calc(100% + 8px);
+      transform:none;
+      width:min(92vw, 340px);
+      max-height:62vh;
       z-index:120;
       box-shadow:0 10px 26px rgba(0,0,0,.42);
     }
     .mobile-board .history-list{
-      max-height:62vh;
+      max-height:50vh;
     }
 
     .logbar{
