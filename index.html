@@ -1020,11 +1020,11 @@ function HistoryPopover({ person, onClose, onDelete, mobile = false }) {
     };
     setTimeout(() => {
       document.addEventListener('mousedown', onDoc);
-      document.addEventListener('touchstart', onDoc, { passive: true });
+      document.addEventListener('click', onDoc);
     }, 0);
     return () => {
       document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('touchstart', onDoc);
+      document.removeEventListener('click', onDoc);
     };
   }, [onClose]);
 
