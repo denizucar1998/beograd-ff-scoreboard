@@ -61,12 +61,6 @@
           "ts": 1778666334390
         },
         {
-          "id": "t-1778666337549-xf4bb3od",
-          "dnf": true,
-          "time": null,
-          "ts": 1778666337549
-        },
-        {
           "id": "t-1778666427501-svl3ciod",
           "dnf": false,
           "time": 66,
@@ -111,8 +105,8 @@
       ]
     }
   },
-  "revision": 12,
-  "version": 12,
-  "updatedAt": "2026-05-13T10:00:27.646Z",
+  "revision": 13,
+  "version": 13,
+  "updatedAt": "2026-05-13T10:00:46.694Z",
   "updatedBy": "client-1778618754111-a2swnb"
 }
