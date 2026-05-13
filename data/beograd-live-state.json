@@ -79,12 +79,6 @@
           "ts": 1778673134926
         },
         {
-          "id": "t-1778673709509-ck4nbfyz",
-          "dnf": true,
-          "time": null,
-          "ts": 1778673709509
-        },
-        {
           "id": "t-1778673722261-m01tq9mg",
           "dnf": false,
           "time": 2000,
@@ -117,8 +111,8 @@
       ]
     }
   },
-  "revision": 36,
-  "version": 36,
-  "updatedAt": "2026-05-13T12:03:09.128Z",
+  "revision": 37,
+  "version": 37,
+  "updatedAt": "2026-05-13T12:03:10.170Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
