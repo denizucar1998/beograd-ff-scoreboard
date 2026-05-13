@@ -44,18 +44,11 @@
       "p5": [],
       "p9": [],
       "p3": [],
-      "p6": [
-        {
-          "id": "t-1778673735578-f3afmjk5",
-          "dnf": false,
-          "time": 1,
-          "ts": 1778673735578
-        }
-      ]
+      "p6": []
     }
   },
-  "revision": 49,
-  "version": 49,
-  "updatedAt": "2026-05-13T12:03:38.548Z",
+  "revision": 50,
+  "version": 50,
+  "updatedAt": "2026-05-13T12:03:40.843Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
