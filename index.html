@@ -714,7 +714,8 @@
       position:fixed;
       left:50%;
       right:auto;
-      top:max(12px, calc(env(safe-area-inset-top) + 8px));
+      top:12px;
+      top:calc(env(safe-area-inset-top, 0px) + 12px);
       transform:translateX(-50%);
       width:min(94vw, 360px);
       max-height:74vh;
