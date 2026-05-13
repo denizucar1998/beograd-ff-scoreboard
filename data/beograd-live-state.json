@@ -67,12 +67,6 @@
           "ts": 1778667181787
         },
         {
-          "id": "t-1778667203611-izaewdyp",
-          "dnf": false,
-          "time": 400,
-          "ts": 1778667203611
-        },
-        {
           "id": "t-1778667646975-v5irgvhm",
           "dnf": true,
           "time": null,
@@ -117,8 +111,8 @@
       ]
     }
   },
-  "revision": 25,
-  "version": 25,
-  "updatedAt": "2026-05-13T12:01:33.437Z",
+  "revision": 26,
+  "version": 26,
+  "updatedAt": "2026-05-13T12:01:44.128Z",
   "updatedBy": "client-1778618721697-ijrw2m"
 }
