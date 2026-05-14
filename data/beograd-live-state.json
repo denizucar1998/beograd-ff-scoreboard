@@ -93,6 +93,12 @@
           "dnf": false,
           "time": 6.83,
           "ts": 1778762368276
+        },
+        {
+          "id": "t-1778787526031-cmm6mccg",
+          "dnf": true,
+          "time": null,
+          "ts": 1778787526031
         }
       ],
       "p3": [
@@ -173,8 +179,8 @@
       ]
     }
   },
-  "revision": 81,
-  "version": 81,
-  "updatedAt": "2026-05-14T19:37:48.180Z",
-  "updatedBy": "web-1778657643160-exafnb"
+  "revision": 82,
+  "version": 82,
+  "updatedAt": "2026-05-14T19:38:46.121Z",
+  "updatedBy": "web-1778657677343-r2t0g6"
 }
