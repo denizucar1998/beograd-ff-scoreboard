@@ -135,6 +135,12 @@
           "dnf": false,
           "time": 7.37,
           "ts": 1778762315886
+        },
+        {
+          "id": "t-1778787465451-zte672ro",
+          "dnf": false,
+          "time": 7.45,
+          "ts": 1778787465451
         }
       ],
       "p8": [
@@ -161,8 +167,8 @@
       ]
     }
   },
-  "revision": 79,
-  "version": 79,
-  "updatedAt": "2026-05-14T19:37:32.332Z",
-  "updatedBy": "web-1778657643160-exafnb"
+  "revision": 80,
+  "version": 80,
+  "updatedAt": "2026-05-14T19:37:45.535Z",
+  "updatedBy": "web-1778657677343-r2t0g6"
 }
