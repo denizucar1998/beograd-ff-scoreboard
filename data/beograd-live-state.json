@@ -77,6 +77,12 @@
           "dnf": false,
           "time": 8.23,
           "ts": 1778759138135
+        },
+        {
+          "id": "t-1778762339720-9iey8s0o",
+          "dnf": false,
+          "time": 5.5,
+          "ts": 1778762339720
         }
       ],
       "p6": [
@@ -119,8 +125,8 @@
       ]
     }
   },
-  "revision": 72,
-  "version": 72,
-  "updatedAt": "2026-05-14T12:38:35.973Z",
+  "revision": 73,
+  "version": 73,
+  "updatedAt": "2026-05-14T12:38:59.824Z",
   "updatedBy": "web-1778657677343-r2t0g6"
 }
