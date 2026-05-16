@@ -445,18 +445,12 @@
           "dnf": false,
           "time": 3.27,
           "ts": 1778967886189
-        },
-        {
-          "id": "t-1778967896712-wkdyzowh",
-          "dnf": false,
-          "time": 3.27,
-          "ts": 1778967896712
         }
       ]
     }
   },
-  "revision": 132,
-  "version": 132,
-  "updatedAt": "2026-05-16T21:44:56.780Z",
-  "updatedBy": "client-1778618721697-ijrw2m"
+  "revision": 133,
+  "version": 133,
+  "updatedAt": "2026-05-16T21:45:29.173Z",
+  "updatedBy": "web-1778657677343-r2t0g6"
 }
